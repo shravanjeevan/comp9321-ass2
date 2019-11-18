@@ -6,6 +6,12 @@ from flask_restplus import Api, fields, inputs, Resource, reqparse
 app = Flask(__name__)
 api = Api(app)
 
+# TODO Refer to these links for api creation:
+# https://flask-restplus.readthedocs.io/en/stable/quickstart.html
+# https://flask-restplus.readthedocs.io/en/stable/example.html
+# https://flask-restplus.readthedocs.io/en/stable/parsing.html
+
+
 # API ENDPOINT DEFINTIONS
 # One with no param
 @api.route('/hello')
