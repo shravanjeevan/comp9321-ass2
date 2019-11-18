@@ -26,9 +26,16 @@ tasks = {
 }
 
 # One with param
-@api.route('/task/<taskid>')
+@api.route('/tasks')
+class ToDoAll(Resource):
+    @api.doc('get_all_tasks')
+    def get(self):
+        return tasks
+
+@api.route('/tasks/<taskid>')
+@api.doc(params={'taskid': 'Id of task stored.'})
 class ToDo(Resource):
-    @api.doc('Get a specific task')
+    @api.doc('get_a_task')
     @api.response(200, 'Success. Collection was found.')
     @api.response(404, 'Not found. Collection was not found')
     def get(self, taskid):
@@ -45,8 +52,7 @@ class ToDo(Resource):
         }, 200
     
     
-    @api.doc('Delete a specific task')
-
+    @api.doc('delete_a_task')
     @api.response(200, 'Success. Collection was deleted.')
     @api.response(404, 'Not found. Collection was not found')
     def delete(self, taskid):
