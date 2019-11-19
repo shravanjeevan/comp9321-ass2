@@ -24,6 +24,9 @@ def process_dataset1(): # USE THIS ONE FOR ML MAYBE
     return df
 
 
+#MERGING 2 DATASETS AND GETTING RID OF ALL THE ARRAYS/JSON TO WORDS SEPARATED BY |
+#CREATING MOVIES BY ___ LISTS FOR USE BY API
+
 def process_dataset2(): # USE THIS ONE JUST FOR API DATA POINTS
     df=pd.read_csv("datasets/tmdb_5000_movies.csv")
     df1=pd.read_csv("datasets/tmdb_5000_credits.csv")
