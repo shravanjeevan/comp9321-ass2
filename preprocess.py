@@ -38,9 +38,11 @@ def process_dataset2(): # USE THIS ONE JUST FOR API DATA POINTS
     result = pd.concat([df, df1], axis=1, join='inner')
     result = result.replace(0,float("NaN"))
     result = result.dropna()
-    print(len(result))
+    # print(len(result))
     # # dropped production_companies and crew - do we want this?
     #     "original_title", "homepage", "release_date", "production_countries", "original_language", "runtime", "spoken_languages", "vote_count", "overview", "status", "tagline"
+    
+    # print(result['crew'])
     result = result[['title', 'budget', 'revenue', 'cast', 'genres', 'keywords', 'popularity', 'revenue']]
 
 
@@ -49,7 +51,10 @@ def process_dataset2(): # USE THIS ONE JUST FOR API DATA POINTS
     keywordslist = np.array(result['keywords'])
     castlist = np.array(result['cast'])
 
-    print(result.columns.values)
+    
+
+
+#     print(result.columns.values)
     modifiedGenres = [] # modified genre list separated by | for dataframe
     modifiedKeywords = [] # modified genre list separated by | for dataframe
     newCast = []
@@ -126,6 +131,9 @@ if __name__ == '__main__':
     words = ['spy']
     print(result[result["keywords"].str.contains(r''.join(expr.format(w) for w in words), regex=True)])
     print("======================== ZOE SALDANA ======================")
+    words = ['chip carruth']
+    print(result[result["cast"].str.contains(r''.join(expr.format(w) for w in words), regex=True)])
+    
     # print(actresslist['zoe saldana'])
     print("===================== FIRST 3 RESULTS ===================")
     # print(result.head(3).to_string())
