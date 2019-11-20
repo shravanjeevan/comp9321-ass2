@@ -1,10 +1,14 @@
 from flask import Flask, render_template
 from flask_restplus import Api, fields, inputs, Resource, reqparse
 
+from preprocess import process_dataset2
 # APPLICATION AND API SETUP
 
 app = Flask(__name__)
 api = Api(app)
+
+# GLOBAL VARIABLES
+actorDF, keywordsDF, genresDF, masterDF = process_dataset2()
 
 # TODO Refer to these links for api creation:
 # https://flask-restplus.readthedocs.io/en/stable/quickstart.html
