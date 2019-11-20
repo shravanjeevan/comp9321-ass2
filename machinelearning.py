@@ -12,9 +12,6 @@ def pickle_model(model,filename):
     f = open('models/'+filename,'wb')
     pickle.dump(model, f, -1)
     f.close() 
-    # pickleModel = pickle.dumps(model)
-    # write_file = open('models/'+filename,'wb')
-    # write_file.write(pickleModel)
 
 def training():
     df = pd.read_csv("datasets/movie_metadata.csv")
