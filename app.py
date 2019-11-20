@@ -9,6 +9,7 @@ from preprocess import process_dataset2
 #   2. Pagination
 #   3. Caching?
 #   4. Data Analytics (also create webpage to display the data analytics)
+#   5. Error codes (revisit)
 
 # APPLICATION AND API SETUP
 
@@ -17,7 +18,7 @@ api = Api(app)
 
 # GLOBAL VARIABLES
 directorDF, screenwriterDF, actorDF, keywordsDF, genresDF, movieDF = process_dataset2()
-print(directorDF)
+
 # TODO Refer to these links for api creation:
 # https://flask-restplus.readthedocs.io/en/stable/quickstart.html
 # https://flask-restplus.readthedocs.io/en/stable/example.html
