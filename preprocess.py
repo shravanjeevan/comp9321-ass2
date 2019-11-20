@@ -138,16 +138,16 @@ def process_dataset2(): # USE THIS ONE JUST FOR API DATA POINTS
 
     keyworddf = pd.DataFrame(keyword_resource, columns=['keywords'])
     genredf = pd.DataFrame(genre_resource, columns=['actor_name'])
-    directordf = pd.DataFrame(directors_resource, columns=['director'])
-    screenwriterdf = pd.DataFrame(writers_resource, columns=['writer'])
+    directordf = pd.DataFrame(directors_resource, columns=['director_name'])
+    screenwriterdf = pd.DataFrame(writers_resource, columns=['writer_name'])
     
     result = result.drop(['genres', "keywords", "cast", "title", "crew"], axis=1)
     result["genres"] = modifiedGenres
     result["keywords"] = modifiedKeywords
     result["cast"] = modifiedCast
     result["title"] = titlelist
-    result["director"] = modifiedDirector
-    result["screenwriter"] = modifiedScreenwriter
+    result["directors"] = modifiedDirector
+    result["screenwriters"] = modifiedScreenwriter
 
     # # print(result.columns.values)
 

@@ -8,7 +8,7 @@ app = Flask(__name__)
 api = Api(app)
 
 # GLOBAL VARIABLES
-actorDF, keywordsDF, genresDF, masterDF = process_dataset2()
+directorDF, screenwriterDF, actorDF, keywordsDF, genresDF, masterDF = process_dataset2()
 
 # TODO Refer to these links for api creation:
 # https://flask-restplus.readthedocs.io/en/stable/quickstart.html
@@ -26,6 +26,12 @@ actors_model = api.model('ActorsModel', {
     )
 }) 
 
+
+directors_model = api.model('DirectorsModel', {
+    'name': fields.String(
+        description="Name of the director queried"
+    )
+})
 # API OUTPUT MODELS
 
 # API ENDPOINT DEFINTIONS
@@ -46,27 +52,83 @@ class Actors(Resource):
         global actorDF
 
         args = actors_parser.parse_args()
-
+        actor_record = actorDF
         if 'name' in args and args['name'] is not None:
-            actor_name = args['name']
-            print(actor_name)
+            actor_name = args['name'].lower()
             q = 'actor_name == ' + actor_name
-            actor_record = actorDF.query(q)
+            actor_record = actor_record.query(q)
             
-            if actor_record.empty:
+            # if actor_record.empty:
+            #     return {
+            #         'error': 'Not Found',
+            #         'message': 'Collection was not found'
+            #     }, 404
+            
+            # return {
+            #     'actor': actor_record.to_dict(orient='index')
+            # }, 200
+
+        if 'gender' in args and args['gender'] is not None:
+            gender = args['gender']
+            q = 'gender == ' + gender
+            actor_record = actor_record.query(q)
+            
+        if actor_record.empty:
+            return {
+                'error': 'Not Found',
+                'message': 'Collection was not found'
+            }, 404
+        elif len(actor_record.index) == 1:
+            return {
+                'actor': actor_record.to_dict(orient='index')
+            }, 200
+            
+        return {
+            'actors': actor_record.to_dict(orient='index')
+        }, 200
+
+
+
+
+        # all_actors = actorDF.to_dict(orient='index')
+
+        # return {
+        #     'actors': all_actors
+        # }, 200
+
+
+# director_parser
+director_parser = reqparse.RequestParser()
+director_parser.add_argument('name', type=str)
+
+@api.route('/directors')
+class Director(Resource):
+    @api.doc('get_directors')
+    @api.expect(directors_model)
+    @api.response(200, 'Success. Collection entries retrieved.')
+    @api.response(400, 'Bad request. Incorrect syntax.')
+    @api.response(404, 'Not found. Collection not found.')
+    def get(self):
+        global directorDF
+        
+        args = director_parser.parse_args()
+        if 'name' in args and args['name'] is not None:
+            director_name = args['name'].lower()
+            q = 'director_name ==' + director_name
+            director_record = directorDF.query(q)
+            if director_record.empty:
                 return {
                     'error': 'Not Found',
                     'message': 'Collection was not found'
                 }, 404
             
             return {
-                'actor': actor_record.to_dict(orient='index')
+                'directors': director_record.to_dict(orient='index')
             }, 200
 
-        all_actors = actorDF.to_dict(orient='index')
-
+        all_directors = directorDF.to_dict(orient='index')
         return {
-            'actors': all_actors
+            'directors': all_directors
         }, 200
 
 # Example only
