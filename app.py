@@ -5,11 +5,12 @@ from preprocess import process_dataset2
 
 # TODO Things that must be done before submission
 # - API:
-#   1. Authentication (Brendan)
+#   1. Authentication
 #   2. Pagination
 #   3. Caching?
 #   4. Data Analytics (also create webpage to display the data analytics)
 #   5. Error codes (revisit)
+#   6. Make sure all the params are labelled in the docs with a description
 
 # APPLICATION AND API SETUP
 
@@ -56,8 +57,8 @@ directorDF, screenwriterDF, actorDF, keywordsDF, genresDF, movieDF = process_dat
 # -- Actors --
 # actors_parser
 actors_parser = reqparse.RequestParser()
-actors_parser.add_argument('name', type=str)
-actors_parser.add_argument('gender', type=str)
+actors_parser.add_argument('name', type=str, help="Name of the actor queried")
+actors_parser.add_argument('gender', type=str, choices=('M', 'F', 'O'), help="Actor gender")
 
 @api.route('/actors')
 class Actors(Resource):
@@ -74,13 +75,19 @@ class Actors(Resource):
 
         # If name param is set
         if 'name' in args and args['name'] is not None:
-            actor_name = args['name'].lower()
-            q = 'actor_name == \'' + actor_name + '\''
-            actor_record = actor_record.query(q)
-            
+            actor_name = args['name'].lower().strip('\'')
+
+            # Old way (just in case we need it) 
+            # q = 'actor_name == \'' + actor_name + '\''
+            # actor_record = actor_record.query(q)
+
+            actor_record = actor_record[actor_record['actor_name'].str.contains(actor_name) == True]
+
         # If gender param is set:
         if 'gender' in args and args['gender'] is not None:
-            gender = args['gender']
+            gender = args['gender'].upper().strip('\'')
+            # TODO validate gender is M, F or O
+
             q = 'gender == \'' + gender + '\''
             actor_record = actor_record.query(q)
             
@@ -126,7 +133,7 @@ class SpecificActor(Resource):
 # -- Directors --
 # director_parser
 director_parser = reqparse.RequestParser()
-director_parser.add_argument('name', type=str)
+director_parser.add_argument('name', type=str, help="Name of the director queried")
 
 @api.route('/directors')
 class Directors(Resource):
@@ -139,10 +146,14 @@ class Directors(Resource):
         global directorDF
         
         args = director_parser.parse_args()
+        director_record = directorDF
         if 'name' in args and args['name'] is not None:
-            director_name = args['name'].lower()
-            q = 'director_name == \'' + director_name + '\''
-            director_record = directorDF.query(q)
+            director_name = args['name'].lower().strip('\'')
+
+            director_record = director_record[director_record['director_name'].str.contains(director_name) == True]
+            # OLD
+            # q = 'director_name == ' + director_name +
+            # director_record = directorDF.query(q)
             if director_record.empty:
                 return {
                     'error': 'Not Found',
@@ -185,7 +196,7 @@ class SpecificDirector(Resource):
 # -- Writers --
 # writer_parser
 writer_parser = reqparse.RequestParser()
-writer_parser.add_argument('name', type=str)
+writer_parser.add_argument('name', type=str, help="Name of the screenwriter queried")
 
 @api.route('/screenwriters')
 class Screenwriter(Resource):
@@ -198,10 +209,14 @@ class Screenwriter(Resource):
         global screenwriterDF
         
         args = writer_parser.parse_args()
+        writer_record = screenwriterDF
         if 'name' in args and args['name'] is not None:
-            writer_name = args['name'].lower()
-            q = 'writer_name == \'' + writer_name + '\''
-            writer_record = screenwriterDF.query(q)
+            writer_name = args['name'].lower().strip('\'')
+            writer_record = writer_record[writer_record['writer_name'].str.contains(writer_name) == True]
+
+            # OLD
+            # q = 'writer_name == \'' + writer_name + '\''
+            # writer_record = screenwriterDF.query(q)
             if writer_record.empty:
                 return {
                     'error': 'Not Found',
@@ -242,7 +257,7 @@ class Screenwriter(Resource):
 # -- Movie --
 # movie_parser
 movie_parser = reqparse.RequestParser()
-movie_parser.add_argument('name', type=str)
+movie_parser.add_argument('name', type=str, help="Name of the movie queried")
 movie_parser.add_argument('actor', type=str) # Multiple actors (union / intersection ?)
 movie_parser.add_argument('director', type=str)
 movie_parser.add_argument('screenwriter', type=str)
@@ -265,7 +280,7 @@ class Movies(Resource):
         args = movie_parser.parse_args()
         # If gender param is set:
         if 'name' in args and args['name'] is not None:
-            name = args['name']
+            name = args['name'].lower()
             q = 'title == \'' + name + '\''
             movie_record = movie_record.query(q)
 
@@ -288,7 +303,8 @@ class Movies(Resource):
         if 'genre' in args and args['genre'] is not None:
             words = args['genre'].split(',')
             movie_record = movie_record[movie_record["genres"].str.contains(r''.join(expr.format(w) for w in words), regex=True)]
-
+        
+        # TODO Discuss whether budget should be <= or >=
         if 'budget' in args and args['budget'] is not None:
             movie_record = movie_record[movie_record["budget"] >= args['budget']]
 
