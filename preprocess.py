@@ -124,23 +124,45 @@ def process_dataset2(): # USE THIS ONE JUST FOR API DATA POINTS
         modifiedCast.append(caststr[:-1])
 
 
-    keyword_resource.sort()
-    genre_resource.sort()
-    directors_resource.sort()
-    writers_resource.sort()
-    # print(directors_resource)
+    # keyword_resource.sort()
+    # genre_resource.sort()
+    # directors_resource.sort()
+    # writers_resource.sort()
+    # # print(directors_resource)
 
     actordf = pd.DataFrame(actors_resource, columns=['actor_name', 'gender'])
-
     actordf = actordf.drop_duplicates()
     actordf = actordf.sort_values(by=["actor_name"])
-
+    actordf = actordf.reset_index()
+    actordf = actordf.drop(['index'], axis=1)
 
     keyworddf = pd.DataFrame(keyword_resource, columns=['keywords'])
-    genredf = pd.DataFrame(genre_resource, columns=['actor_name'])
+    keyworddf = keyworddf.drop_duplicates()
+    keyworddf = keyworddf.sort_values(by=["keywords"])
+    keyworddf = keyworddf.reset_index()
+    keyworddf = keyworddf.drop(['index'], axis=1)
+
+
+    genredf = pd.DataFrame(genre_resource, columns=['genres'])
+    genredf = genredf.drop_duplicates()
+    genredf = genredf.sort_values(by=["genres"])
+    genredf = genredf.reset_index()
+    genredf = genredf.drop(['index'], axis=1)
+
+
     directordf = pd.DataFrame(directors_resource, columns=['director_name'])
+    directordf = directordf.drop_duplicates()
+    directordf = directordf.sort_values(by=["director_name"])
+    directordf = directordf.reset_index()
+    directordf = directordf.drop(['index'], axis=1)
+
     screenwriterdf = pd.DataFrame(writers_resource, columns=['writer_name'])
-    
+    screenwriterdf = screenwriterdf.drop_duplicates()
+    screenwriterdf = screenwriterdf.sort_values(by=["writer_name"])
+    screenwriterdf = screenwriterdf.reset_index()
+    screenwriterdf = screenwriterdf.drop(['index'], axis=1)
+
+
     result = result.drop(['genres', "keywords", "cast", "title", "crew"], axis=1)
     result["genres"] = modifiedGenres
     result["keywords"] = modifiedKeywords

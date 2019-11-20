@@ -9,7 +9,7 @@ api = Api(app)
 
 # GLOBAL VARIABLES
 directorDF, screenwriterDF, actorDF, keywordsDF, genresDF, masterDF = process_dataset2()
-
+print(directorDF)
 # TODO Refer to these links for api creation:
 # https://flask-restplus.readthedocs.io/en/stable/quickstart.html
 # https://flask-restplus.readthedocs.io/en/stable/example.html
@@ -32,6 +32,14 @@ directors_model = api.model('DirectorsModel', {
         description="Name of the director queried"
     )
 })
+
+writers_model = api.model('WritersModel', {
+    'name': fields.String(
+        description="Name of the screenwriter queried"
+    )
+})
+
+
 # API OUTPUT MODELS
 
 # API ENDPOINT DEFINTIONS
@@ -123,13 +131,50 @@ class Director(Resource):
                 }, 404
             
             return {
-                'directors': director_record.to_dict(orient='index')
+                'director': director_record.to_dict(orient='index')
             }, 200
 
         all_directors = directorDF.to_dict(orient='index')
         return {
             'directors': all_directors
         }, 200
+
+
+# writer_parser
+writer_parser = reqparse.RequestParser()
+writer_parser.add_argument('name', type=str)
+
+@api.route('/screenwriters')
+class Screenwriter(Resource):
+    @api.doc('get_screenwriters')
+    @api.expect(writers_model)
+    @api.response(200, 'Success. Collection entries retrieved.')
+    @api.response(400, 'Bad request. Incorrect syntax.')
+    @api.response(404, 'Not found. Collection not found.')
+    def get(self):
+        global screenwriterDF
+        
+        args = writer_parser.parse_args()
+        if 'name' in args and args['name'] is not None:
+            writer_name = args['name'].lower()
+            q = 'writer_name ==' + writer_name
+            writer_record = screenwriterDF.query(q)
+            if writer_record.empty:
+                return {
+                    'error': 'Not Found',
+                    'message': 'Collection was not found'
+                }, 404
+            
+            return {
+                'screenwriter': writer_record.to_dict(orient='index')
+            }, 200
+
+        all_screenwriters = screenwriterDF.to_dict(orient='index')
+        return {
+            'screenwriters': all_screenwriters
+        }, 200
+
+
 
 # Example only
 tasks = {
