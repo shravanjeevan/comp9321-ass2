@@ -2,13 +2,21 @@ from flask import Flask, render_template
 from flask_restplus import Api, fields, inputs, Resource, reqparse
 
 from preprocess import process_dataset2
+
+# TODO Things that must be done before submission
+# - API:
+#   1. Authentication (Brendan)
+#   2. Pagination
+#   3. Caching?
+#   4. Data Analytics (also create webpage to display the data analytics)
+
 # APPLICATION AND API SETUP
 
 app = Flask(__name__)
 api = Api(app)
 
 # GLOBAL VARIABLES
-directorDF, screenwriterDF, actorDF, keywordsDF, genresDF, masterDF = process_dataset2()
+directorDF, screenwriterDF, actorDF, keywordsDF, genresDF, movieDF = process_dataset2()
 print(directorDF)
 # TODO Refer to these links for api creation:
 # https://flask-restplus.readthedocs.io/en/stable/quickstart.html
@@ -27,17 +35,17 @@ print(directorDF)
 # }) 
 
 
-directors_model = api.model('DirectorsModel', {
-    'name': fields.String(
-        description="Name of the director queried"
-    )
-})
+# directors_model = api.model('DirectorsModel', {
+#     'name': fields.String(
+#         description="Name of the director queried"
+#     )
+# })
 
-writers_model = api.model('WritersModel', {
-    'name': fields.String(
-        description="Name of the screenwriter queried"
-    )
-})
+# writers_model = api.model('WritersModel', {
+#     'name': fields.String(
+#         description="Name of the screenwriter queried"
+#     )
+# })
 
 
 # API OUTPUT MODELS
@@ -116,7 +124,6 @@ class SpecificActor(Resource):
             'actors': actor_record.to_dict(orient='index')
         }, 200
 
-
 # -- Directors --
 # director_parser
 director_parser = reqparse.RequestParser()
@@ -125,7 +132,7 @@ director_parser.add_argument('name', type=str)
 @api.route('/directors')
 class Directors(Resource):
     @api.doc('get_directors')
-    @api.expect(directors_model)
+    @api.expect(director_parser)
     @api.response(200, 'Success. Collection entries retrieved.')
     @api.response(400, 'Bad request. Incorrect syntax.')
     @api.response(404, 'Not found. Collection not found.')
@@ -152,7 +159,7 @@ class Directors(Resource):
             'directors': all_directors
         }, 200
 
-
+# -- Writers --
 # writer_parser
 writer_parser = reqparse.RequestParser()
 writer_parser.add_argument('name', type=str)
@@ -160,7 +167,7 @@ writer_parser.add_argument('name', type=str)
 @api.route('/screenwriters')
 class Screenwriter(Resource):
     @api.doc('get_screenwriters')
-    @api.expect(writers_model)
+    @api.expect(writer_parser)
     @api.response(200, 'Success. Collection entries retrieved.')
     @api.response(400, 'Bad request. Incorrect syntax.')
     @api.response(404, 'Not found. Collection not found.')
@@ -187,60 +194,87 @@ class Screenwriter(Resource):
             'screenwriters': all_screenwriters
         }, 200
 
+# -- Movie --
+# movie_parser
+movie_parser = reqparse.RequestParser()
+movie_parser.add_argument('name', type=str)
+movie_parser.add_argument('actor', type=str) # Multiple actors (union / intersection ?)
+movie_parser.add_argument('director', type=str)
+movie_parser.add_argument('screenwriter', type=str)
+movie_parser.add_argument('keyword', type=str)
+movie_parser.add_argument('genre', type=str)
+movie_parser.add_argument('budget', type=str)
+movie_parser.add_argument('revenue', type=str)
 
-
-# Example only
-tasks = {
-    'task1': {
-        'movie' : "GET MOVEI"
-    },
-    'task2': "Return director name"
-}
-
-# One with param
-@api.route('/tasks')
-class ToDoAll(Resource):
-    @api.doc('get_all_tasks')
+@api.route('/movies/')
+class Movies(Resource):
+    @api.doc('get_all_movies')
+    @api.expect(movie_parser)
+    @api.response(200, 'Success. Collection entries retrieved.')
+    @api.response(400, 'Bad request. Incorrect syntax.')
+    @api.response(404, 'Not found. Collection not found.')
     def get(self):
-        return tasks
+        global movieDF
 
-@api.route('/tasks/<taskid>')
-@api.doc(params={'taskid': 'Id of task stored.'})
-class ToDo(Resource):
-    @api.doc('get_a_task')
-    @api.response(200, 'Success. Collection was found.')
-    @api.response(404, 'Not found. Collection was not found')
-    def get(self, taskid):
-
-        if taskid not in tasks:
-            return {
-                'error': 'Not Found',
-                'message': 'Collection was not found'
-            }, 404
-
-        return { 
-            'task_id': taskid,
-            'task_information': tasks[taskid]
+        return {
+            'movies': movieDF.to_dict(orient='index')
         }, 200
+
+
+# -- Specific Movie
+
+# # Example only
+# tasks = {
+#     'task1': {
+#         'movie' : "GET MOVEI"
+#     },
+#     'task2': "Return director name"
+# }
+
+# # One with param
+# @api.route('/tasks')
+# class ToDoAll(Resource):
+#     @api.doc('get_all_tasks')
+#     def get(self):
+#         return tasks
+
+# @api.route('/tasks/<taskid>')
+# @api.doc(params={'taskid': 'Id of task stored.'})
+# class ToDo(Resource):
+#     @api.doc('get_a_task')
+#     @api.response(200, 'Success. Collection was found.')
+#     @api.response(404, 'Not found. Collection was not found')
+#     def get(self, taskid):
+
+#         if taskid not in tasks:
+#             return {
+#                 'error': 'Not Found',
+#                 'message': 'Collection was not found'
+#             }, 404
+
+#         return { 
+#             'task_id': taskid,
+#             'task_information': tasks[taskid]
+#         }, 200
     
     
-    @api.doc('delete_a_task')
-    @api.response(200, 'Success. Collection was deleted.')
-    @api.response(404, 'Not found. Collection was not found')
-    def delete(self, taskid):
+#     @api.doc('delete_a_task')
+#     @api.response(200, 'Success. Collection was deleted.')
+#     @api.response(404, 'Not found. Collection was not found')
+#     def delete(self, taskid):
 
-        if taskid not in tasks:
-            return {
-                'error': 'Not Found',
-                'message': 'Collection was not found'
-            }, 404
+#         if taskid not in tasks:
+#             return {
+#                 'error': 'Not Found',
+#                 'message': 'Collection was not found'
+#             }, 404
 
-        del tasks[taskid]
+#         del tasks[taskid]
 
-        if taskid not in tasks:
-            return { 
-                'message': 'Collection deleted successfully.'
-            }, 200
+#         if taskid not in tasks:
+#             return { 
+#                 'message': 'Collection deleted successfully.'
+#             }, 200
 
 # APP ROUTING FUNCTIONS
 @app.route('/home', methods=['GET'])

@@ -44,7 +44,7 @@ def process_dataset2(): # USE THIS ONE JUST FOR API DATA POINTS
     
     # print(result['crew'])
 
-    result = result[['title', 'budget', 'revenue', 'cast', 'genres', 'keywords', 'popularity', 'revenue', 'crew']]
+    result = result[['title', 'budget', 'revenue', 'cast', 'genres', 'keywords', 'popularity', 'crew', 'vote_average']]
 
 
     titlelist = np.array(result['title'])
@@ -164,12 +164,15 @@ def process_dataset2(): # USE THIS ONE JUST FOR API DATA POINTS
 
 
     result = result.drop(['genres', "keywords", "cast", "title", "crew"], axis=1)
-    result["genres"] = modifiedGenres
-    result["keywords"] = modifiedKeywords
-    result["cast"] = modifiedCast
     result["title"] = titlelist
     result["directors"] = modifiedDirector
     result["screenwriters"] = modifiedScreenwriter
+    result["cast"] = modifiedCast
+    result["genres"] = modifiedGenres
+    result["keywords"] = modifiedKeywords
+    result = result.reset_index(drop=True)
+    result_columns = ['title', 'cast', 'directors', 'screenwriters','genres', 'keywords', 'budget','revenue', 'popularity','vote_average']
+    result = result[result_columns]
 
     # # print(result.columns.values)
 
