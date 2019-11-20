@@ -116,9 +116,7 @@ class SpecificActor(Resource):
                 'message': 'Collection was not found'
             }, 404
 
-
         actor_record = actorDF.iloc[[actor_id]]
-
 
         return {
             'actors': actor_record.to_dict(orient='index')
@@ -220,8 +218,27 @@ class Movies(Resource):
             'movies': movieDF.to_dict(orient='index')
         }, 200
 
-
 # -- Specific Movie
+@api.route('/movies/<int:movie_id>')
+class SpecificActor(Resource):
+    @api.doc('get_specific_movie')
+    @api.response(200, 'Success. Collection entries retrieved.')
+    @api.response(400, 'Bad request. Incorrect syntax.')
+    @api.response(404, 'Not found. Collection not found.')
+    def get(self, movie_id):
+        if not movieDF.index.isin([movie_id]).any():
+            return {
+                'error': 'Not Found',
+                'message': 'Collection was not found'
+            }, 404
+
+
+        movie_record = movieDF.iloc[[movie_id]]
+
+
+        return {
+            'movie': movie_record.to_dict(orient='index')
+        }, 200
 
 # # Example only
 # tasks = {
