@@ -75,13 +75,13 @@ class Actors(Resource):
         # If name param is set
         if 'name' in args and args['name'] is not None:
             actor_name = args['name'].lower()
-            q = 'actor_name == ' + actor_name
+            q = 'actor_name == \'' + actor_name + '\''
             actor_record = actor_record.query(q)
             
         # If gender param is set:
         if 'gender' in args and args['gender'] is not None:
             gender = args['gender']
-            q = 'gender == ' + gender
+            q = 'gender == \'' + gender + '\''
             actor_record = actor_record.query(q)
             
         # If collection not found:
@@ -141,7 +141,7 @@ class Directors(Resource):
         args = director_parser.parse_args()
         if 'name' in args and args['name'] is not None:
             director_name = args['name'].lower()
-            q = 'director_name ==' + director_name
+            q = 'director_name == \'' + director_name + '\''
             director_record = directorDF.query(q)
             if director_record.empty:
                 return {
@@ -176,7 +176,7 @@ class Screenwriter(Resource):
         args = writer_parser.parse_args()
         if 'name' in args and args['name'] is not None:
             writer_name = args['name'].lower()
-            q = 'writer_name ==' + writer_name
+            q = 'writer_name == \'' + writer_name + '\''
             writer_record = screenwriterDF.query(q)
             if writer_record.empty:
                 return {
@@ -202,8 +202,8 @@ movie_parser.add_argument('director', type=str)
 movie_parser.add_argument('screenwriter', type=str)
 movie_parser.add_argument('keyword', type=str)
 movie_parser.add_argument('genre', type=str)
-movie_parser.add_argument('budget', type=str)
-movie_parser.add_argument('revenue', type=str)
+movie_parser.add_argument('budget', type=int)
+movie_parser.add_argument('revenue', type=int)
 
 @api.route('/movies/')
 class Movies(Resource):
@@ -214,9 +214,48 @@ class Movies(Resource):
     @api.response(404, 'Not found. Collection not found.')
     def get(self):
         global movieDF
+        movie_record = movieDF
+        expr = '(?=.*{})'
+        args = movie_parser.parse_args()
+        # If gender param is set:
+        if 'name' in args and args['name'] is not None:
+            name = args['name']
+            q = 'title == \'' + name + '\''
+            movie_record = movie_record.query(q)
 
+        if 'actor' in args and args['actor'] is not None:
+            words = args['actor'].split(',')
+            movie_record = movie_record[movie_record["cast"].str.contains(r''.join(expr.format(w) for w in words), regex=True)]
+
+        if 'director' in args and args['director'] is not None:
+            words = args['director'].split(',')
+            movie_record = movie_record[movie_record["directors"].str.contains(r''.join(expr.format(w) for w in words), regex=True)]
+
+        if 'screenwriter' in args and args['screenwriter'] is not None:
+            words = args['screenwriter'].split(',')
+            movie_record = movie_record[movie_record["screenwriters"].str.contains(r''.join(expr.format(w) for w in words), regex=True)]
+
+        if 'keyword' in args and args['keyword'] is not None:
+            words = args['keyword'].split(',')
+            movie_record = movie_record[movie_record["keywords"].str.contains(r''.join(expr.format(w) for w in words), regex=True)]
+
+        if 'genre' in args and args['genre'] is not None:
+            words = args['genre'].split(',')
+            movie_record = movie_record[movie_record["genres"].str.contains(r''.join(expr.format(w) for w in words), regex=True)]
+
+        if 'budget' in args and args['budget'] is not None:
+            movie_record = movie_record[movie_record["budget"] >= args['budget']]
+
+        if 'revenue' in args and args['revenue'] is not None:
+            movie_record = movie_record[movie_record["revenue"] >= args['revenue']]
+        
+        if(len(movie_record.index) == 1):
+            return {
+                'movie': movie_record.to_dict(orient='index')
+            }, 200            
+        
         return {
-            'movies': movieDF.to_dict(orient='index')
+            'movies': movie_record.to_dict(orient='index')
         }, 200
 
 # -- Specific Movie

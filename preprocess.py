@@ -72,7 +72,7 @@ def process_dataset2(): # USE THIS ONE JUST FOR API DATA POINTS
 
 
     for i in range(len(titlelist)):
-        title = titlelist[i].lower()
+        title = titlelist[i].lower().strip()
         titlelist[i] = title
         genres = genreslist[i]
         keywords = keywordslist[i]
@@ -142,13 +142,11 @@ def process_dataset2(): # USE THIS ONE JUST FOR API DATA POINTS
     keyworddf = keyworddf.reset_index()
     keyworddf = keyworddf.drop(['index'], axis=1)
 
-
     genredf = pd.DataFrame(genre_resource, columns=['genres'])
     genredf = genredf.drop_duplicates()
     genredf = genredf.sort_values(by=["genres"])
     genredf = genredf.reset_index()
     genredf = genredf.drop(['index'], axis=1)
-
 
     directordf = pd.DataFrame(directors_resource, columns=['director_name'])
     directordf = directordf.drop_duplicates()
