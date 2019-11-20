@@ -2,8 +2,7 @@
 
 ## Necessary Packages
 ```
-pip3 install Flask
-pip3 install flask-restplus
+pip3 install -r requirements.txt
 ```
 
 ## How to run application
