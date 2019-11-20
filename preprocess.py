@@ -5,21 +5,36 @@ import json
 #from matplotlib.lines import Line2D
 
 
-def process_dataset1(): # USE THIS ONE FOR ML MAYBE
-    df = pd.read_csv("datasets/movie_metadata.csv")
-    df['movie_title'] = df['movie_title'].str.strip()
-    df['movie_title'] = df['movie_title'].str.lower()
+def process_dataset_forML(df): # USE THIS ONE FOR ML MAYBE
+    # df = pd.read_csv("datasets/movie_metadata.csv")
+    # df['movie_title'] = df['movie_title'].str.strip()
+    # df['movie_title'] = df['movie_title'].str.lower()
 
     
-    df = df.drop(["color", "duration", "num_critic_for_reviews", "movie_imdb_link", "aspect_ratio"], axis=1)    # WHAT SHOULD WE DROP?    
-    
+    columns_to_drop = [
+        'color',
+        'director_name',
+        'duration',
+        'actor_3_facebook_likes',
+        'actor_2_name',
+        'gross',
+        'genres',
+        'actor_1_name',
+        'movie_title',
+        'actor_3_name',
+        'facenumber_in_poster',
+        'plot_keywords',
+        'movie_imdb_link',
+        'language',
+        'country',
+        'content_rating',
+        'title_year',
+        'aspect_ratio'
+    ]
+    df = df.drop(columns_to_drop, axis=1)
     df = df.replace(0,float("NaN"))
-    df = df.dropna()
-    # df['title_year'] = df['title_year'].astype(int)
-    df = df.set_index('movie_title')
-    # print(df.columns.values)
-    # print(df.loc[['avatar']].to_string())
-    # print(df.head(5))
+    df = df.dropna(axis=0, how='any')
+    df = df.astype(int)
     
     return df
 
