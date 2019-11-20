@@ -158,6 +158,30 @@ class Directors(Resource):
             'directors': all_directors
         }, 200
 
+# -- Specific Director --
+
+@api.route('/directors/<int:director_id>')
+class SpecificDirector(Resource):
+    @api.doc('get_specific_director')
+    @api.response(200, 'Success. Collection entries retrieved.')
+    @api.response(400, 'Bad request. Incorrect syntax.')
+    @api.response(404, 'Not found. Collection not found.')
+    def get(self, director_id):
+        if not directorDF.index.isin([director_id]).any():
+            return {
+                'error': 'Not Found',
+                'message': 'Collection was not found'
+            }, 404
+
+
+        director_record = directorDF.iloc[[director_id]]
+
+
+        return {
+            'director': director_record.to_dict(orient='index')
+        }, 200
+
+
 # -- Writers --
 # writer_parser
 writer_parser = reqparse.RequestParser()
@@ -191,6 +215,28 @@ class Screenwriter(Resource):
         all_screenwriters = screenwriterDF.to_dict(orient='index')
         return {
             'screenwriters': all_screenwriters
+        }, 200
+
+# -- Specific Writer --
+@api.route('/screenwriters/<int:screenwriter_id>')
+class Screenwriter(Resource):
+    @api.doc('get_specific_screenwriter')
+    @api.response(200, 'Success. Collection entries retrieved.')
+    @api.response(400, 'Bad request. Incorrect syntax.')
+    @api.response(404, 'Not found. Collection not found.')
+    def get(self, screenwriter_id):
+        if not screenwriterDF.index.isin([screenwriter_id]).any():
+            return {
+                'error': 'Not Found',
+                'message': 'Collection was not found'
+            }, 404
+
+
+        screenwriter_record = screenwriterDF.iloc[[screenwriter_id]]
+
+
+        return {
+            'screenwriter': screenwriter_record.to_dict(orient='index')
         }, 200
 
 # -- Movie --
