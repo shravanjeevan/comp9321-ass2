@@ -15,17 +15,65 @@ actorDF, keywordsDF, genresDF, masterDF = process_dataset2()
 # https://flask-restplus.readthedocs.io/en/stable/example.html
 # https://flask-restplus.readthedocs.io/en/stable/parsing.html
 
+# API INPUT MODELS
+actors_model = api.model('ActorsModel', {
+    'name': fields.String(
+        description="Name of the actor required"
+    ),
+    'gender': fields.String(
+        description="Actor gender",
+        enum=["F", "M", "O"]
+    )
+}) 
+
+# API OUTPUT MODELS
 
 # API ENDPOINT DEFINTIONS
-# One with no param
-@api.route('/hello')
-class Hello(Resource):
+
+# -- Actors --
+actors_parser = reqparse.RequestParser()
+actors_parser.add_argument('name', type=str)
+actors_parser.add_argument('gender', type=str)
+
+@api.route('/actors')
+class Actors(Resource):
+    @api.doc('get_actors')
+    @api.expect(actors_model)
+    @api.response(200, 'Success. Collection entries retrieved.')
+    @api.response(400, 'Bad request. Incorrect syntax.')
+    @api.response(404, 'Not found. Collection not found.')
     def get(self):
-        return {'hello': 'world'}
+        global actorDF
+
+        args = actors_parser.parse_args()
+
+        if 'name' in args and args['name'] is not None:
+            actor_name = args['name']
+            print(actor_name)
+            q = 'actor_name == ' + actor_name
+            actor_record = actorDF.query(q)
+            
+            if actor_record.empty:
+                return {
+                    'error': 'Not Found',
+                    'message': 'Collection was not found'
+                }, 404
+            
+            return {
+                'actor': actor_record.to_dict(orient='index')
+            }, 200
+
+        all_actors = actorDF.to_dict(orient='index')
+
+        return {
+            'actors': all_actors
+        }, 200
 
 # Example only
 tasks = {
-    'task1': "Get movie",
+    'task1': {
+        'movie' : "GET MOVEI"
+    },
     'task2': "Return director name"
 }
 
