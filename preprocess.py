@@ -40,36 +40,27 @@ def process_dataset_forML(df): # USE THIS ONE FOR ML MAYBE
 
 
 #MERGING 2 DATASETS AND GETTING RID OF ALL THE ARRAYS/JSON TO WORDS SEPARATED BY |
-#CREATING MOVIES BY ___ LISTS FOR USE BY API
+#CREATING MORE DFs FOR USE BY API
 
 def process_dataset2(): # USE THIS ONE JUST FOR API DATA POINTS
     df=pd.read_csv("datasets/tmdb_5000_movies.csv")
     df1=pd.read_csv("datasets/tmdb_5000_credits.csv")
 
+    # merging datasets
+    df      = df.drop(["title"], axis=1) 
+    df      = df.set_index('id')
+    df1     = df1.set_index('movie_id')
+    result  = pd.concat([df, df1], axis=1, join='inner')
+    result  = result.replace(0,float("NaN"))
+    result  = result.dropna()
 
-    df = df.drop(["title"], axis=1)
-    df = df.set_index('id')
-    df1 = df1.set_index('movie_id')
-    result = pd.concat([df, df1], axis=1, join='inner')
-    result = result.replace(0,float("NaN"))
-    result = result.dropna()
-    # print(len(result))
-    # # dropped production_companies and crew - do we want this?
-    #     "original_title", "homepage", "release_date", "production_countries", "original_language", "runtime", "spoken_languages", "vote_count", "overview", "status", "tagline"
+    # columns 
+    titlelist       = np.array(result['title'])
+    genreslist      = np.array(result['genres'])
+    keywordslist    = np.array(result['keywords'])
+    castlist        = np.array(result['cast'])
+    crewlist        = np.array(result['crew'])
     
-    # print(result['crew'])
-
-    result = result[['title', 'budget', 'revenue', 'cast', 'genres', 'keywords', 'popularity', 'crew', 'vote_average']]
-
-
-    titlelist = np.array(result['title'])
-    genreslist = np.array(result['genres'])
-    keywordslist = np.array(result['keywords'])
-    castlist = np.array(result['cast'])
-    crewlist = np.array(result['crew'])
-    
-
-
     # modified lists separated by | for dataframe to add to df
     modifiedGenres = [] 
     modifiedKeywords = [] 
@@ -85,19 +76,22 @@ def process_dataset2(): # USE THIS ONE JUST FOR API DATA POINTS
     writers_resource = []
 
 
-
     for i in range(len(titlelist)):
-        title = titlelist[i].lower().strip()
-        titlelist[i] = title
-        genres = genreslist[i]
-        keywords = keywordslist[i]
-        cast = castlist[i]
-        crew = crewlist[i]
+        title           = titlelist[i].lower().strip()
+        titlelist[i]    = title
+        genres          = genreslist[i]
+        keywords        = keywordslist[i]
+        cast            = castlist[i]
+        crew            = crewlist[i]
+
+        # Clean String
         genresstr = ""
         keywordstr = ""
         caststr = ""
         directorstr = ""
         writerstr = ""
+
+        # Loop for Director and Screenwriters
         for crew_member in json.loads(crew):
             job = crew_member['job']
             name = crew_member['name'].lower().strip()
@@ -109,26 +103,25 @@ def process_dataset2(): # USE THIS ONE JUST FOR API DATA POINTS
                 writerstr += name + "|"
                 if name not in directors_resource:
                     writers_resource.append(name)
-        modifiedDirector.append(directorstr[:-1])
-        modifiedScreenwriter.append(writerstr[:-1])
-   
+
+        # Loop for Genres
         for genre in json.loads(genres):
             name = genre['name'].lower().strip()
             if name not in genre_resource:
                 genre_resource.append(name)
             genresstr += name + "|"
-        modifiedGenres.append(genresstr[:-1])
+
+        # Loop for Keywords
         for keyword in json.loads(keywords):
             name = keyword['name'].lower().strip()
             if name not in keyword_resource:
                 keyword_resource.append(name)
             keywordstr += name + "|"
-        modifiedKeywords.append(keywordstr[:-1])
+
+        # Loop for Cast
         for actor in json.loads(cast):
             if actor['order'] > 10: continue # only taking the top 10 actors per movie
             name = actor['name'].lower().strip()
-            
-            caststr += name + "|"
             if name not in actors_resource:
                 if actor['gender'] == 2:
                     actors_resource.append([name, "M"])
@@ -136,15 +129,16 @@ def process_dataset2(): # USE THIS ONE JUST FOR API DATA POINTS
                     actors_resource.append([name, "F"])
                 else :
                     actors_resource.append([name, "O"])
+            caststr += name + "|"
+
+        # Append for df
+        modifiedDirector.append(directorstr[:-1])
+        modifiedScreenwriter.append(writerstr[:-1])
+        modifiedGenres.append(genresstr[:-1])        
+        modifiedKeywords.append(keywordstr[:-1])
         modifiedCast.append(caststr[:-1])
 
-
-    # keyword_resource.sort()
-    # genre_resource.sort()
-    # directors_resource.sort()
-    # writers_resource.sort()
-    # # print(directors_resource)
-
+    # Creating the Dataframes
     actordf = pd.DataFrame(actors_resource, columns=['actor_name', 'gender'])
     actordf = actordf.drop_duplicates()
     actordf = actordf.sort_values(by=["actor_name"])
@@ -175,46 +169,39 @@ def process_dataset2(): # USE THIS ONE JUST FOR API DATA POINTS
     screenwriterdf = screenwriterdf.reset_index()
     screenwriterdf = screenwriterdf.drop(['index'], axis=1)
 
-
-    result = result.drop(['genres', "keywords", "cast", "title", "crew"], axis=1)
-    result["title"] = titlelist
-    result["directors"] = modifiedDirector
+    result                  = result.drop(['genres', "keywords", "cast", "title", "crew"], axis=1)
+    result["title"]         = titlelist
+    result["directors"]     = modifiedDirector
     result["screenwriters"] = modifiedScreenwriter
-    result["cast"] = modifiedCast
-    result["genres"] = modifiedGenres
-    result["keywords"] = modifiedKeywords
-    result = result.reset_index(drop=True)
-    result_columns = ['title', 'cast', 'directors', 'screenwriters','genres', 'keywords', 'budget','revenue', 'popularity','vote_average']
-    result = result[result_columns]
-
-    # # print(result.columns.values)
-
-    # # print(result.columns.values)
-    # # print(result.head(5).to_string())
+    result["cast"]          = modifiedCast
+    result["genres"]        = modifiedGenres
+    result["keywords"]      = modifiedKeywords
+    result                  = result.reset_index(drop=True)
+    result_columns          = ['title', 'cast', 'directors', 'screenwriters', 'genres', 'keywords', 'budget', 'revenue', 'popularity', 'vote_average']
+    result                  = result[result_columns]
 
     return directordf, screenwriterdf, actordf, keyworddf, genredf, result
     
 
 if __name__ == '__main__':
-    process_dataset1()
+    # process_dataset1()
     directordf, screenwriterdf, actordf, keyworddf, genredf, result = process_dataset2()
-    print(genredf)
-    print(actordf)
-    print(keyworddf)
-    print(screenwriterdf)
-    print(directordf)
-    print(result)
-    print("======================== ACTION =========================")
+    # print(genredf)
+    # print(actordf)
+    # print(keyworddf)
+    # print(screenwriterdf)
+    # print(directordf)
+    # print(result)
+    # print("======================== ACTION =========================")
     # print(moviesbygenre['Action'])
-    print("======================== SPY ======================")
-    expr = '(?=.*{})'
-    words = ['spy']
-    print(result[result["keywords"].str.contains(r''.join(expr.format(w) for w in words), regex=True)])
-    print("======================== ZOE SALDANA ======================")
-    words = ['zoe saldana']
-    print(result[result["cast"].str.contains(r''.join(expr.format(w) for w in words), regex=True)])
-    
+    # print("======================== SPY ======================")
+    # expr = '(?=.*{})'
+    # words = ['spy']
+    # print(result[result["keywords"].str.contains(r''.join(expr.format(w) for w in words), regex=True)])
+    # print("======================== ZOE SALDANA ======================")
+    # words = ['zoe saldana']
+    # print(result[result["cast"].str.contains(r''.join(expr.format(w) for w in words), regex=True)])
     # print(actresslist['zoe saldana'])
-    print("===================== FIRST 3 RESULTS ===================")
+    # print("===================== FIRST 3 RESULTS ===================")
     # print(result.head(3).to_string())
     # print(moviesbykeywords)

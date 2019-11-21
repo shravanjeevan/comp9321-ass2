@@ -342,6 +342,33 @@ class SpecificActor(Resource):
             'movie': movie_record.to_dict(orient='index')
         }, 200
 
+
+
+@api.route('/keywords')
+class Keywords(Resource):
+    @api.doc('get_keywords')
+    @api.response(200, 'Success. Collection entries retrieved.')
+    @api.response(400, 'Bad request. Incorrect syntax.')
+    @api.response(404, 'Not found. Collection not found.')
+    def get(self):
+        global keywordsDF
+        return {
+            'keywords': keywordsDF.to_dict(orient='index')
+        }, 200
+
+@api.route('/genres')
+class Genres(Resource):
+    @api.doc('get_genres')
+    @api.response(200, 'Success. Collection entries retrieved.')
+    @api.response(400, 'Bad request. Incorrect syntax.')
+    @api.response(404, 'Not found. Collection not found.')
+    def get(self):
+        global genresDF
+        return {
+            'genres': genresDF.to_dict(orient='index')
+        }, 200
+
+
 # # Example only
 # tasks = {
 #     'task1': {
