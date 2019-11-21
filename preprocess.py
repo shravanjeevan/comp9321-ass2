@@ -51,6 +51,10 @@ def process_dataset2(): # USE THIS ONE JUST FOR API DATA POINTS
     df      = df.set_index('id')
     df1     = df1.set_index('movie_id')
     result  = pd.concat([df, df1], axis=1, join='inner')
+
+    result_columns          = ['title', 'cast', 'crew', 'genres', 'keywords', 'budget', 'revenue', 'popularity', 'vote_average']
+    result                  = result[result_columns]
+
     result  = result.replace(0,float("NaN"))
     result  = result.dropna()
 
@@ -72,9 +76,9 @@ def process_dataset2(): # USE THIS ONE JUST FOR API DATA POINTS
     keyword_resource = []
     genre_resource = []
     actors_resource = []
+    genders_resource = []
     directors_resource = []
     writers_resource = []
-
 
     for i in range(len(titlelist)):
         title           = titlelist[i].lower().strip()
@@ -123,12 +127,13 @@ def process_dataset2(): # USE THIS ONE JUST FOR API DATA POINTS
             if actor['order'] > 10: continue # only taking the top 10 actors per movie
             name = actor['name'].lower().strip()
             if name not in actors_resource:
+                actors_resource.append(name)
                 if actor['gender'] == 2:
-                    actors_resource.append([name, "M"])
+                    genders_resource.append('M')
                 elif actor['gender'] == 1 :
-                    actors_resource.append([name, "F"])
+                    genders_resource.append('F')
                 else :
-                    actors_resource.append([name, "O"])
+                    genders_resource.append('O')
             caststr += name + "|"
 
         # Append for df
@@ -139,7 +144,7 @@ def process_dataset2(): # USE THIS ONE JUST FOR API DATA POINTS
         modifiedCast.append(caststr[:-1])
 
     # Creating the Dataframes
-    actordf = pd.DataFrame(actors_resource, columns=['actor_name', 'gender'])
+    actordf = pd.DataFrame({'actor_name': actors_resource, 'gender': genders_resource})
     actordf = actordf.drop_duplicates()
     actordf = actordf.sort_values(by=["actor_name"])
     actordf = actordf.reset_index()
