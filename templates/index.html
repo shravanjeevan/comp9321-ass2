@@ -1,5 +1,38 @@
 {% extends "base.html" %}
 
 {% block body %}
-<h1>Movie IMDB Score Predictor</h1>
+<center>
+  <h1>Movie IMDB Score Predictor</h1>
+</center>
+
+<form>
+  <div class="form-group">
+    <label for="Director">Director</label>
+    <input type="text" class="form-control" id="directorInput" aria-describedby="directorHelp" placeholder="Director Name">
+    <small id="directorHelp" class="form-text text-muted">Please enter the director of your film</small>
+  </div>
+  <div class="form-group">
+    <label for="Genre">Genre</label>
+    <input type="text" class="form-control" id="genreInput" placeholder="Genre">
+    <small id="directorHelp" class="form-text text-muted">Please enter the genre of your film</small>
+    <div class="form-group">
+  </div>
+  <div class="form-group">
+   <label for="Actors">Actors</label>
+   <small id="actorsHelp" class="form-text text-muted">Please select the actors in your film</small>
+   <select multiple class="form-control" id="exampleFormControlSelect2">
+     <option>1</option>
+     <option>2</option>
+     <option>3</option>
+     <option>4</option>
+     <option>5</option>
+   </select>
+ </div>
+  </div>
+
+  <center>
+  <button type="submit" class="btn btn-primary">Predict Rating</button>
+  </center>
+</form>
+
 {% endblock %}
