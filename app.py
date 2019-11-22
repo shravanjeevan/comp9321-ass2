@@ -2,6 +2,7 @@ from flask import Flask, render_template
 from flask_restplus import Api, fields, inputs, Resource, reqparse
 
 from preprocess import process_dataset2
+from machinelearning import predict_score
 
 # TODO Things that must be done before submission
 # - API:
@@ -366,6 +367,40 @@ class Genres(Resource):
         global genresDF
         return {
             'genres': genresDF.to_dict(orient='index')
+        }, 200
+
+
+# -- Movie --
+# movie_parser
+imdb_score_parser = reqparse.RequestParser()
+# imdb_score_parser.add_argument('num_critic_for_reviews', type=int, help="Number of Critic Reviews")
+imdb_score_parser.add_argument('director_facebook_likes', type=int, help="Number of Facebook Likes for Director")
+imdb_score_parser.add_argument('actor_1_facebook_likes', type=int, help="Number of Facebook likes for Actor 1")
+imdb_score_parser.add_argument('actor_2_facebook_likes', type=int, help="Number of Facebook likes for Actor 2")
+# imdb_score_parser.add_argument('num_voted_users', type=int, help="Number of votes by users")
+imdb_score_parser.add_argument('cast_total_facebook_likes', type=int, help="Total number of Facebook likes for cast")
+# imdb_score_parser.add_argument('num_user_for_reviews', type=int, , help="")
+imdb_score_parser.add_argument('budget', type=int, help="Budget")
+imdb_score_parser.add_argument('movie_facebook_likes', type=int, help="Number of Facebook likes on the movie")
+
+@api.route('/imdb_score_prediction')
+class IMDBScorePredictor(Resource):
+    @api.doc('get_imdb_score_prediction')
+    @api.expect(imdb_score_parser)
+    @api.response(200, 'Success. Collection entries retrieved.')
+    @api.response(400, 'Bad request. Incorrect syntax.')
+    @api.response(404, 'Not found. Collection not found.')
+    def get(self):
+        args = imdb_score_parser.parse_args()
+        director_facebook_likes = args['director_facebook_likes']
+        actor_1_facebook_likes = args['actor_1_facebook_likes']
+        cast_total_facebook_likes = args['cast_total_facebook_likes']
+        budget = args['budget']
+        actor_2_facebook_likes = args['actor_2_facebook_likes']
+        movie_facebook_likes = args['movie_facebook_likes']
+
+        return {
+            'movie_prediction_score': predict_score(director_facebook_likes,actor_1_facebook_likes,cast_total_facebook_likes,budget,actor_2_facebook_likes,movie_facebook_likes)
         }, 200
 
 

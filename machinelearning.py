@@ -38,31 +38,29 @@ def training():
     confusion_matrix(movie_y_test, predictions)
 
     # accuracy
-    accuracy_score(movie_y_test, predictions)
+    print(accuracy_score(movie_y_test, predictions))
 
     # dump model to file
     pickle_model(knn, "Knn")
 
-def predict_score():
+def predict_score(i_director_facebook_likes, i_actor_1_facebook_likes, i_cast_total_facebook_likes, i_budget, i_actor_2_facebook_likes, i_movie_facebook_likes):
     # values that need to be provided are: num_critic_for_reviews, director_facebook_likes, actor_1_facebook_likes, num_voted_users, cast_total_facebook_likes, num_user_for_reviews, budget, actor_2_facebook_likes, movie_facebook_likes
-    num_critic_for_reviews = 200
-    director_facebook_likes = 1000
-    actor_1_facebook_likes = 2000
-    num_voted_users = 80000
-    cast_total_facebook_likes = 8000
-    num_user_for_reviews = 5000
-    budget = 30000000
-    actor_2_facebook_likes = 500
+    # num_critic_for_reviews = 200
+    director_facebook_likes = i_director_facebook_likes
+    actor_1_facebook_likes = i_actor_1_facebook_likes
+    # num_voted_users = 80000
+    cast_total_facebook_likes = i_cast_total_facebook_likes
+    # num_user_for_reviews = 5000
+    budget = i_budget
+    actor_2_facebook_likes = i_actor_2_facebook_likes
     # imdb_score = ?
-    movie_facebook_likes = 5000
+    movie_facebook_likes = i_movie_facebook_likes
 
-    movie_X = np.array([[movie_facebook_likes, director_facebook_likes, actor_1_facebook_likes, num_voted_users, cast_total_facebook_likes, num_user_for_reviews, budget, actor_2_facebook_likes, movie_facebook_likes]])
+    movie_X = np.array([[director_facebook_likes, actor_1_facebook_likes, cast_total_facebook_likes, budget, actor_2_facebook_likes, movie_facebook_likes]])
 
     model = pickle.load(open("./models/Knn", "rb"))
 
     prediction = model.predict(movie_X)
 
-    print(np.array2string(prediction))
-
-training()
-predict_score()
+    # return prediction[0]
+    return np.array2string(prediction)

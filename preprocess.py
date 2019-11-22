@@ -9,8 +9,6 @@ def process_dataset_forML(df): # USE THIS ONE FOR ML MAYBE
     # df = pd.read_csv("datasets/movie_metadata.csv")
     # df['movie_title'] = df['movie_title'].str.strip()
     # df['movie_title'] = df['movie_title'].str.lower()
-
-    
     columns_to_drop = [
         'color',
         'director_name',
@@ -29,7 +27,10 @@ def process_dataset_forML(df): # USE THIS ONE FOR ML MAYBE
         'country',
         'content_rating',
         'title_year',
-        'aspect_ratio'
+        'aspect_ratio',
+        'num_critic_for_reviews',
+        'num_voted_users',
+        'num_user_for_reviews'
     ]
     df = df.drop(columns_to_drop, axis=1)
     df = df.replace(0,float("NaN"))
