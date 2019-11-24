@@ -229,7 +229,7 @@ class Analytics(Resource):
     @api.response(500, 'Internal Service Error.')
     def get(self):
         global analytics_api_call_count
-        # print(json.dumps(analytics)) 
+        # print(json.dumps(analytics))
         response = { "href": request.base_url,
                     "results_shown": len(analytics_api_call_count),
                     "total_results": len(analytics_api_call_count),
@@ -399,18 +399,18 @@ class IMDBScorePredictor(Resource):
         # budget
         budget = args['budget']
 
-        # DIRECTOR 
+        # DIRECTOR
         director = args['director_name'].lower().strip('\'').strip('\"')
         q = 'director_name == \'' + director + '\''
         director = director_record.query(q)
-        
+
         if director_record.empty:
             return {
                 'error': 'Not Found',
                 'message': 'Director Not Found'
             }, 404
         director_likes = director['facebook_likes'].iloc[0]
-        
+
         # ACTOR 1
         actor1 = args['actor_1_name'].lower().strip('\'').strip('\"')
         q = 'actor_name == \'' + actor1 + '\''
@@ -420,7 +420,7 @@ class IMDBScorePredictor(Resource):
                 'error': 'Not Found',
                 'message': 'Actor 1 Not Found'
             }, 404
-        actor1_likes = actor1['facebook_likes'].iloc[0]        
+        actor1_likes = actor1['facebook_likes'].iloc[0]
 
         # ACTOR 2
         if 'actor_2_name' in args and args['actor_2_name'] is not None:
@@ -657,7 +657,7 @@ class Screenwriter(Resource):
             # writer_record = screenwriterDF.query(q)
 
         writer_record, response = pagination(request, args, writer_record)
-        
+
 
         args = writer_parser.parse_args()
         writer_record = screenwriterDF
@@ -712,7 +712,7 @@ class SpecificScreenwriter(Resource):
         updateCSV(analytics_api_call_count)
 
         if not screenwriterDF.index.isin([screenwriter_id]).any():
-        
+
             return {
                 'error': 'Not Found',
                 'message': 'Collection was not found'
@@ -936,6 +936,5 @@ def screenwriters_ui():
     return render_template('screenwriters.html')
 
 
-
 if __name__ == '__main__':
-    app.run(debug=True, use_reloader=True, ssl_context='adhoc')
+    app.run(debug=True, use_reloader=True)
