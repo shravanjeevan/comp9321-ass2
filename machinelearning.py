@@ -18,7 +18,7 @@ def training():
     df = process_dataset_forML(df)
     df = shuffle(df)
 
-    split_percentage = 0.7
+    split_percentage = 0.75
     X = df.drop('imdb_score', axis=1).values
     y = df['imdb_score'].values
     split_point = int(len(X) * split_percentage)
@@ -43,20 +43,19 @@ def training():
     # dump model to file
     pickle_model(knn, "Knn")
 
-def predict_score(i_director_facebook_likes, i_actor_1_facebook_likes, i_cast_total_facebook_likes, i_budget, i_actor_2_facebook_likes, i_movie_facebook_likes):
+def predict_score(i_director_facebook_likes, i_actor_1_facebook_likes, i_actor_2_facebook_likes, i_actor_3_facebook_likes,  i_budget):
     # values that need to be provided are: num_critic_for_reviews, director_facebook_likes, actor_1_facebook_likes, num_voted_users, cast_total_facebook_likes, num_user_for_reviews, budget, actor_2_facebook_likes, movie_facebook_likes
     # num_critic_for_reviews = 200
     director_facebook_likes = i_director_facebook_likes
     actor_1_facebook_likes = i_actor_1_facebook_likes
     # num_voted_users = 80000
-    cast_total_facebook_likes = i_cast_total_facebook_likes
-    # num_user_for_reviews = 5000
-    budget = i_budget
     actor_2_facebook_likes = i_actor_2_facebook_likes
+    # num_user_for_reviews = 5000
+    actor_3_facebook_likes = i_actor_3_facebook_likes
     # imdb_score = ?
-    movie_facebook_likes = i_movie_facebook_likes
+    budget = i_budget
 
-    movie_X = np.array([[director_facebook_likes, actor_1_facebook_likes, cast_total_facebook_likes, budget, actor_2_facebook_likes, movie_facebook_likes]])
+    movie_X = np.array([[director_facebook_likes, actor_1_facebook_likes, actor_2_facebook_likes, actor_3_facebook_likes, budget]])
 
     model = pickle.load(open("./models/Knn", "rb"))
 
@@ -64,3 +63,6 @@ def predict_score(i_director_facebook_likes, i_actor_1_facebook_likes, i_cast_to
 
     # return prediction[0]
     return np.array2string(prediction)
+
+if __name__ == '__main__':
+    training()
