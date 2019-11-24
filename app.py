@@ -62,12 +62,19 @@ register_parser = reqparse.RequestParser()
 register_parser.add_argument('username', type=str, help="Input your desired username")
 register_parser.add_argument('password', type=str, help="Input your desired password")
 
-@api.route('/register')
+@api.route('/register', methods=['GET'])
 class Register(Resource):
     @api.doc('register_account')
     @api.expect(register_parser)
     @api.response(200, 'Success. registered successfully.')
+    @api.response(400, 'Failed, missing args')
     def get(self):
+        args = writer_parser.parse_args()
+        if "username" not in args or "password" not in args:
+            return {
+                'error': 'missing args',
+                'message': 'Failed, missing args'
+            }, 400
         return {
                 'message': 'Success. registered successfully.'
             }, 200
@@ -78,7 +85,7 @@ login_parser = reqparse.RequestParser()
 login_parser.add_argument('username', type=str, help="Input your desired username")
 login_parser.add_argument('password', type=str, help="Input your desired password")
 
-@api.route('/login')
+@api.route('/login', methods=['GET'])
 class Login(Resource):
     @api.doc('register_account')
     @api.expect(register_parser)
@@ -626,4 +633,4 @@ def index():
     return render_template('index.html')
 
 if __name__ == '__main__':
-    app.run(debug=True, use_reloader=True)
+    app.run(debug=True, use_reloader=True, ssl_context='adhoc')
