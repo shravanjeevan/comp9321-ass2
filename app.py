@@ -8,6 +8,8 @@ import pandas as pd
 import numpy as np
 import os
 import requests as req
+import string
+import secrets
 # TODO Things that must be done before submission
 # - API:
 #   1. Authentication
@@ -18,6 +20,8 @@ import requests as req
 #   6. Make sure all the params are labelled in the docs with a description
 
 # APPLICATION AND API SETUP
+token_dict = {}
+user_dict = {}
 
 app = Flask(__name__)
 
@@ -36,7 +40,7 @@ def loadCSV():
 
 #verify token
 def valid_token(token):
-    if token == 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9':
+    if token in token_dict:
         return True
     else:
         return False
@@ -85,13 +89,26 @@ class Register(Resource):
     @api.expect(register_parser)
     @api.response(200, 'Success. registered successfully.')
     @api.response(400, 'Failed, missing args')
+    @api.response(409, 'Failed, this user already exists')
     def get(self):
-        args = writer_parser.parse_args()
-        if "username" not in args or "password" not in args:
+        args = register_parser.parse_args()
+        if "username" not in args or "password" not in args or args['username'] is None or args['password'] is None:
             return {
                 'error': 'missing args',
                 'message': 'Failed, missing args'
             }, 400
+
+        username = args['username'].lower().strip('\'').strip('\"')
+        password = args['password'].lower().strip('\'').strip('\"')
+
+        print("username: ",username," password: ", password)
+        if username in user_dict:
+            return {
+                       'error': 'Failed',
+                       'message': 'Failed, this user exists'
+                   }, 409
+
+        user_dict[username] = password
         return {
                 'message': 'Success. registered successfully.'
             }, 200
@@ -107,10 +124,39 @@ class Login(Resource):
     @api.doc('login_account')
     @api.expect(register_parser)
     @api.response(200, 'Success. logged in successfully')
+    @api.response(400, 'Failed, missing args')
+    @api.response(401, 'Unauthorised access to collection.')
+    @api.response(404, 'Failed, this user does not exist')
     def get(self):
+        args = login_parser.parse_args()
+        if "username" not in args or "password" not in args or args['username'] is None or args['password'] is None:
+            return {
+                       'error': 'missing args',
+                       'message': 'Failed, missing args'
+                   }, 400
+
+        username = args['username'].lower().strip('\'').strip('\"')
+        password = args['password'].lower().strip('\'').strip('\"')
+        print("username: ", username, " password: ", password)
+        print("user_dict = ", user_dict)
+        if username not in user_dict:
+            return {
+                       'error': 'Failed',
+                       'message': 'Failed, this user does not exist'
+                   }, 404
+        if user_dict[username] != password:
+            return {
+                       'error': 'Failed',
+                       'message': 'Failed, this password does not match the users password'
+                   }, 401
+
+        alphabet = string.ascii_letters + string.digits
+        token = ''.join(secrets.choice(alphabet) for i in range(36))
+        token_dict[token] = True
+        print("token_dict: ", token_dict)
         return {
                 'message': 'Success. logged in successfully',
-                'token' : 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9'
+                'token' : token
             }, 200
 
 # -- Actors --
