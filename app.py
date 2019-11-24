@@ -25,14 +25,25 @@ api = Api(app, title='COMP9321 Assignment 2 - API Documentation', validate=True)
 dirname = os.path.dirname(__file__)
 analytics_path = os.path.join(dirname, 'analytics.csv')
 
-def updateCSV(apiUsage): 
+def updateCSV_vertical(apiUsage): 
     df = pd.DataFrame.from_dict(apiUsage, orient='columns')
     df.to_csv(analytics_path, index=False)
-    
-def loadCSV():
-    analytics_api_call_count = pd.read_csv(analytics_path)
-    return  analytics_api_call_count.to_dict()
 
+def updateCSV_horizontal(apiUsage, filename):
+    df = pd.DataFrame.from_dict(apiUsage, orient='index')
+    df = df.reset_index()
+    df.to_csv(os.path.join(dirname, filename), index=False)
+
+    print(apiUsage)
+
+def loadCSV_vertical(filename):
+    df = pd.read_csv(os.path.join(dirname, filename))
+    return  df.to_dict()
+
+def loadCSV_horizontal(filename):
+    df = pd.read_csv(os.path.join(dirname, filename))
+    result = {row[0]: row[1] for row in df.values}
+    return result
 
 #verify token
 def valid_token(token):
@@ -43,27 +54,11 @@ def valid_token(token):
 
 # GLOBAL VARIABLES
 actor_average, directorDF, screenwriterDF, actorDF, keywordsDF, genresDF, movieDF = process_dataset2()
-analytics_api_call_count = loadCSV()
-   
-# {
-#     'actors': 0,
-#     'specific actor': 0,
-#     'directors': 0,
-#     'specific director': 0,
-#     'screenwriters': 0,
-#     'specific screenwriter': 0,
-#     'movies': 0,
-#     'specific movie': 0,
-#     'keywords': 0,
-#     'genres': 0,
-#     'score predictor': 0
-# }
-
-top_actor = dict()
-top_movie = dict()
-top_director = dict()
-top_screenwriter = dict()
-
+analytics_api_call_count = loadCSV_vertical('analytics.csv')
+top_actor = loadCSV_horizontal('top_actor.csv')
+top_movie = loadCSV_horizontal('top_movie.csv')
+top_director = loadCSV_horizontal('top_director.csv')
+top_screenwriter = loadCSV_horizontal('top_screenwriter.csv')
 # TODO Refer to these links for api creation:
 # https://flask-restplus.readthedocs.io/en/stable/quickstart.html
 # https://flask-restplus.readthedocs.io/en/stable/example.html
@@ -139,7 +134,7 @@ class Actors(Resource):
         global analytics_api_call_count
         global top_actor
         analytics_api_call_count['actors'][0]+= 1
-        updateCSV(analytics_api_call_count)
+        updateCSV_vertical(analytics_api_call_count)
         args = actors_parser.parse_args()
         actor_record = actorDF
 
@@ -181,8 +176,10 @@ class Actors(Resource):
             top_actor[first_actor] += 1
         else:
             top_actor[first_actor] = 1
+        updateCSV_horizontal(top_actor, 'top_actor.csv')
         # print(top_actor)
-        print(actor_record['actor_name'].iloc[0])
+        # print(top_actor)
+        # print(actor_record['actor_name'].iloc[0])
         if(len(actor_record.index) == 1):
             response_message['actor'] = actor_record.to_dict(orient='index')
         else :
@@ -214,7 +211,7 @@ class SpecificActor(Resource):
                    }, 401
         global analytics_api_call_count
         analytics_api_call_count['specific actor'][0]+= 1
-        updateCSV(analytics_api_call_count)
+        updateCSV_vertical(analytics_api_call_count)
 
         if not actorDF.index.isin([actor_id]).any():
             return {
@@ -280,7 +277,7 @@ class Director(Resource):
         global analytics_api_call_count
         global top_director
         analytics_api_call_count['directors'][0] += 1
-        updateCSV(analytics_api_call_count)
+        updateCSV_vertical(analytics_api_call_count)
 
         args = director_parser.parse_args()
         if 'token' not in args or not valid_token(args["token"]):
@@ -308,7 +305,7 @@ class Director(Resource):
             top_director[first_director] += 1
         else:
             top_director[first_director] = 1
-
+        updateCSV_horizontal(top_director, 'top_director.csv')
         if(len(director_record.index) == 1):
             response_message['director'] = director_record.to_dict(orient='index')
         else :
@@ -339,7 +336,7 @@ class SpecificDirector(Resource):
                    }, 401
         global analytics_api_call_count
         analytics_api_call_count['specific director'][0] += 1
-        updateCSV(analytics_api_call_count)
+        updateCSV_vertical(analytics_api_call_count)
 
         if not directorDF.index.isin([director_id]).any():
             return {
@@ -376,7 +373,7 @@ class Genres(Resource):
         global genresDF
         global analytics_api_call_count
         analytics_api_call_count['genres'][0] += 1
-        updateCSV(analytics_api_call_count)
+        updateCSV_vertical(analytics_api_call_count)
 
         genres_record = genresDF
         args = genre_parser.parse_args()
@@ -433,7 +430,7 @@ class IMDBScorePredictor(Resource):
         director_record = directorDF
         actor_record    = actorDF
         analytics_api_call_count['score predictor'][0]+= 1
-        updateCSV(analytics_api_call_count)
+        updateCSV_vertical(analytics_api_call_count)
 
         args = imdb_score_parser.parse_args()
         if 'token' not in args or not valid_token(args["token"]):
@@ -524,7 +521,7 @@ class Keywords(Resource):
         global keywordsDF
         global analytics_api_call_count
         analytics_api_call_count['keywords'][0]+= 1
-        updateCSV(analytics_api_call_count)
+        updateCSV_vertical(analytics_api_call_count)
 
         keywords_record = keywordsDF
         args = keyword_parser.parse_args()
@@ -583,7 +580,7 @@ class Movies(Resource):
         global analytics_api_call_count
         global top_movie
         analytics_api_call_count['movies'][0]+= 1
-        updateCSV(analytics_api_call_count)
+        updateCSV_vertical(analytics_api_call_count)
 
         movie_record = movieDF
         expr = '(?=.*{})'
@@ -641,7 +638,7 @@ class Movies(Resource):
             top_movie[first_movie] += 1
         else:
             top_movie[first_movie] = 1
-
+        updateCSV_horizontal(top_movie, 'top_movie.csv')
         if(len(movie_record.index) == 1):
             response_message['movie'] = movie_record.to_dict(orient='index')
         else :
@@ -675,7 +672,7 @@ class SpecificMovie(Resource):
                    }, 401
         global analytics_api_call_count
         analytics_api_call_count['specific movie'][0]+= 1
-        updateCSV(analytics_api_call_count)
+        updateCSV_vertical(analytics_api_call_count)
 
         if not movieDF.index.isin([movie_id]).any():
             return {
@@ -716,7 +713,7 @@ class Screenwriter(Resource):
         global screenwriterDF
         global analytics_api_call_count
         analytics_api_call_count['screenwriters'][0]+= 1
-        updateCSV(analytics_api_call_count)
+        updateCSV_vertical(analytics_api_call_count)
 
         args = writer_parser.parse_args()
         if 'token' not in args or not valid_token(args["token"]):
@@ -762,7 +759,7 @@ class Screenwriter(Resource):
             top_screenwriter[first_screenwriter] += 1
         else:
             top_screenwriter[first_screenwriter] = 1
-
+        updateCSV_horizontal(top_screenwriter, 'top_screenwriter.csv')
         if(len(writer_record.index) == 1):
             response_message['writer'] = writer_record.to_dict(orient='index')
         else :
@@ -796,7 +793,7 @@ class SpecificScreenwriter(Resource):
         global analytics_api_call_count
         global top_screenwriter
         analytics_api_call_count['specific screenwriter'][0]+= 1
-        updateCSV(analytics_api_call_count)
+        updateCSV_vertical(analytics_api_call_count)
 
         if not screenwriterDF.index.isin([screenwriter_id]).any():
 
