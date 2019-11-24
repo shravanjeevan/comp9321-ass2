@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
+<br> </br>
 {% block body %}
-
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
   <a class="navbar-brand" href="#"></a>
   <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
@@ -8,22 +8,45 @@
   </button>
   <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
     <div class="navbar-nav">
-      <a class="nav-item nav-link active" href="/application/home">Home<span class="sr-only">(current)</span></a>
+      <a class="nav-item nav-link" href="/application/home">Home</a>
       <a class="nav-item nav-link" href="/application/actors_ui">Actors</a>
       <a class="nav-item nav-link" href="/application/directors_ui">Directors</a>
       <a class="nav-item nav-link" href="/application/genres_ui">Genres</a>
       <a class="nav-item nav-link" href="/application/keywords_ui">Keywords</a>
       <a class="nav-item nav-link" href="/application/movies_ui">Movies</a>
       <a class="nav-item nav-link" href="/application/screenwriters_ui">Screenwriters</a>
-      <a class="nav-item nav-link" href="/application/imdbscoreprediction_ui">IMDB Score Prediction</a>
+      <a class="nav-item nav-link active" href="/application/imdbscorepredictorui">IMDB Score Prediction<span class="sr-only">(current)</span></a>
     </div>
   </div>
 </nav>
 <br> </br>
 <center>
-  <h1> Home </h1>
-
-<pr> Please select an option from the menu bar above
-
+  <h1>IMDB Score Prediction</h1>
 </center>
+<br> </br>
+
+
+<form>
+
+  <div class="form-group">
+  <label for="Director">Director</label>
+  <select class="form-control">
+    {% for dir in directors[1:] %}
+     <option>{{dir}}</option>
+    {% endfor %}
+  </select>
+  <small id="directorHelp" class="form-text text-muted">Please select the director of your film</small>
+  </div>
+
+ <div class="form-group">
+  <label for="budget">Budget</label>
+  <input type="number" class="form-control" id="exampleInputEmail1" aria-describedby="budgetHelp">
+  <small id="budgetHelp" class="form-text text-muted">Please enter the budget of your film</small>
+</div>
+
+  <center>
+  <button type="submit" class="btn btn-primary">Predict Score</button>
+  </center>
+</form>
+
 {% endblock %}

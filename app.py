@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request
 from flask_restplus import Api, fields, inputs, Resource, reqparse
 from urllib.parse import quote_plus as urlencode
-
+import json
 from preprocess import process_dataset2
 from machinelearning import predict_score
 
@@ -17,10 +17,29 @@ from machinelearning import predict_score
 # APPLICATION AND API SETUP
 
 app = Flask(__name__)
-api = Api(app)
+
+api = Api(app, title='COMP9321 Assignment 2 - API Documentation', validate=True)
 
 # GLOBAL VARIABLES
-directorDF, screenwriterDF, actorDF, keywordsDF, genresDF, movieDF = process_dataset2()
+actor_average, directorDF, screenwriterDF, actorDF, keywordsDF, genresDF, movieDF = process_dataset2()
+analytics_api_call_count = {
+    'actors': 0,
+    'specific actor': 0,
+    'directors': 0,
+    'specific director': 0,
+    'screenwriters': 0,
+    'specific screenwriter': 0,
+    'movies': 0,
+    'specific movie': 0,
+    'keywords': 0,
+    'genres': 0,
+    'score predictor': 0
+}
+
+top_actor = dict()
+top_movie = dict()
+top_director = dict()
+top_screenwriter = dict()
 
 # TODO Refer to these links for api creation:
 # https://flask-restplus.readthedocs.io/en/stable/quickstart.html
@@ -30,13 +49,27 @@ directorDF, screenwriterDF, actorDF, keywordsDF, genresDF, movieDF = process_dat
 # API INPUT MODELS
 # actors_model = api.model('ActorsModel', {
 #     'name': fields.String(
-#         description="Name of the actor queried"
+#         description="Name of the actor queried",
+#         required=False,
+#         example="Tom Hanks"
 #     ),
 #     'gender': fields.String(
 #         description="Actor gender",
-#         enum=["F", "M", "O"]
+#         required=False,
+#         enum=["F", "M", "O"],
+#         example="M"
+#     ),
+#     'offset': fields.Integer(
+#         description="Start",
+#         required="False",
+#         example="0"
+#     ),
+#     'limit': fields.Integer(
+#         description="Number of returned results",
+#         required=False,
+#         example="10"
 #     )
-# }) 
+# })
 
 
 # directors_model = api.model('DirectorsModel', {
@@ -106,7 +139,7 @@ actors_parser.add_argument('limit', type=int, help="number of results to return"
 actors_parser.add_argument('token', type=str, help="token, use your login and login at /login for a token,"
                                                    "if you don't have a login, you can register at /register ")
 
-@api.route('/actors')
+@api.route('/actors', doc={"description" : "Actors 123"})
 class Actors(Resource):
     @api.doc('get_actors')
     @api.expect(actors_parser)
@@ -116,7 +149,9 @@ class Actors(Resource):
     @api.response(404, 'Not found. Collection not found.')
     def get(self):
         global actorDF
-
+        global analytics_api_call_count
+        global top_actor
+        analytics_api_call_count['actors'] += 1
         args = actors_parser.parse_args()
         actor_record = actorDF
 
@@ -130,7 +165,7 @@ class Actors(Resource):
         if 'name' in args and args['name'] is not None:
             actor_name = args['name'].lower().strip('\'').strip('\"')
 
-            # Old way (just in case we need it) 
+            # Old way (just in case we need it)
             # q = 'actor_name == \'' + actor_name + '\''
             # actor_record = actor_record.query(q)
 
@@ -151,7 +186,14 @@ class Actors(Resource):
                 'error': 'Not Found',
                 'message': 'Collection was not found'
             }, 404
-        
+
+        first_actor = actor_record['actor_name'].iloc[0]
+        if first_actor in top_actor:
+            top_actor[first_actor] += 1
+        else:
+            top_actor[first_actor] = 1
+        # print(top_actor)
+        print(actor_record['actor_name'].iloc[0])
         if(len(actor_record.index) == 1):
             response['actor'] = actor_record.to_dict(orient='index')
         else :
@@ -168,6 +210,8 @@ class SpecificActor(Resource):
     @api.response(404, 'Not found. Collection not found.')
     def get(self, actor_id):
         # print()
+        global analytics_api_call_count
+        analytics_api_call_count['specific actor'] += 1
         if not actorDF.index.isin([actor_id]).any():
             return {
                 'error': 'Not Found',
@@ -197,7 +241,10 @@ class Director(Resource):
     @api.response(404, 'Not found. Collection not found.')
     def get(self):
         global directorDF
-        
+        global analytics_api_call_count
+        global top_director
+        analytics_api_call_count['directors'] += 1
+
         args = director_parser.parse_args()
         director_record = directorDF
         if 'name' in args and args['name'] is not None:
@@ -216,6 +263,12 @@ class Director(Resource):
                 'message': 'Collection was not found'
             }, 404
 
+        first_director = director_record['director_name'].iloc[0]
+        if first_director in top_director:
+            top_director[first_director] += 1
+        else:
+            top_director[first_director] = 1
+
         if(len(director_record.index) == 1):
             response['director'] = director_record.to_dict(orient='index')
         else :
@@ -233,6 +286,8 @@ class SpecificDirector(Resource):
     @api.response(400, 'Bad request. Incorrect syntax.')
     @api.response(404, 'Not found. Collection not found.')
     def get(self, director_id):
+        global analytics_api_call_count
+        analytics_api_call_count['specific director'] += 1
         if not directorDF.index.isin([director_id]).any():
             return {
                 'error': 'Not Found',
@@ -263,7 +318,9 @@ class Screenwriter(Resource):
     @api.response(404, 'Not found. Collection not found.')
     def get(self):
         global screenwriterDF
-        
+        global analytics_api_call_count
+        analytics_api_call_count['screenwriters'] += 1
+
         args = writer_parser.parse_args()
         writer_record = screenwriterDF
         if 'name' in args and args['name'] is not None:
@@ -282,6 +339,13 @@ class Screenwriter(Resource):
                 'message': 'Collection was not found'
             }, 404
 
+        first_screenwriter = writer_record['writer_name'].iloc[0]
+        # print(first_screenwriter)
+        if first_screenwriter in top_screenwriter:
+            top_screenwriter[first_screenwriter] += 1
+        else:
+            top_screenwriter[first_screenwriter] = 1
+
         if(len(writer_record.index) == 1):
             response['writer'] = writer_record.to_dict(orient='index')
         else :
@@ -297,15 +361,17 @@ class Screenwriter(Resource):
     @api.response(400, 'Bad request. Incorrect syntax.')
     @api.response(404, 'Not found. Collection not found.')
     def get(self, screenwriter_id):
+        global analytics_api_call_count
+        global top_screenwriter
+        analytics_api_call_count['specific screenwriter'] += 1
         if not screenwriterDF.index.isin([screenwriter_id]).any():
             return {
                 'error': 'Not Found',
                 'message': 'Collection was not found'
             }, 404
 
-
+        # print(screenwriterDF.to_string)
         screenwriter_record = screenwriterDF.iloc[[screenwriter_id]]
-
 
         return {
             'screenwriter': screenwriter_record.to_dict(orient='index')
@@ -334,9 +400,13 @@ class Movies(Resource):
     @api.response(404, 'Not found. Collection not found.')
     def get(self):
         global movieDF
+        global analytics_api_call_count
+        global top_movie
+        analytics_api_call_count['movies'] += 1
         movie_record = movieDF
         expr = '(?=.*{})'
         args = movie_parser.parse_args()
+
 
         if 'name' in args and args['name'] is not None:
             name = args['name'].lower()
@@ -362,22 +432,30 @@ class Movies(Resource):
         if 'genre' in args and args['genre'] is not None:
             words = args['genre'].lower().strip('\'').strip('\"').split(',')
             movie_record = movie_record[movie_record["genres"].str.contains(r''.join(expr.format(w) for w in words), regex=True)]
-        
+
         # TODO Discuss whether budget should be <= or >=
         if 'budget' in args and args['budget'] is not None:
             movie_record = movie_record[movie_record["budget"] >= args['budget']]
 
         if 'revenue' in args and args['revenue'] is not None:
             movie_record = movie_record[movie_record["revenue"] >= args['revenue']]
-        
+
         movie_record, response = pagination(request, args, movie_record)
+        # print(movie_record.to_string)
+
 
         if movie_record.empty:
             return {
                 'error': 'Not Found',
                 'message': 'Collection was not found'
             }, 404
-        
+
+        first_movie = movie_record['title'].iloc[0]
+        if first_movie in top_movie:
+            top_movie[first_movie] += 1
+        else:
+            top_movie[first_movie] = 1
+
         if(len(movie_record.index) == 1):
             response['movie'] = movie_record.to_dict(orient='index')
         else :
@@ -388,13 +466,14 @@ class Movies(Resource):
 
 # -- Specific Movie
 @api.route('/movies/<int:movie_id>')
-class SpecificActor(Resource):
+class SpecificMovie(Resource):
     @api.doc('get_specific_movie')
     @api.response(200, 'Success. Collection entries retrieved.')
     @api.response(400, 'Bad request. Incorrect syntax.')
     @api.response(404, 'Not found. Collection not found.')
     def get(self, movie_id):
-
+        global analytics_api_call_count
+        analytics_api_call_count['specific movie'] += 1
         if not movieDF.index.isin([movie_id]).any():
             return {
                 'error': 'Not Found',
@@ -422,6 +501,8 @@ class Keywords(Resource):
     @api.response(404, 'Not found. Collection not found.')
     def get(self):
         global keywordsDF
+        global analytics_api_call_count
+        analytics_api_call_count['keywords'] += 1
         keywords_record = keywordsDF
         args = keyword_parser.parse_args()
         keywords_record, response = pagination(request, args, keywords_record)
@@ -453,6 +534,8 @@ class Genres(Resource):
     @api.response(404, 'Not found. Collection not found.')
     def get(self):
         global genresDF
+        global analytics_api_call_count
+        analytics_api_call_count['genres'] += 1
         genres_record = genresDF
         args = genre_parser.parse_args()
         genres_record, response = pagination(request, args, genres_record)
@@ -469,7 +552,6 @@ class Genres(Resource):
             response['genres'] = genres_record.to_dict(orient='index')
 
         return response, 200
-
 
 
 def pagination(request, args, record):
@@ -492,14 +574,15 @@ def pagination(request, args, record):
             if args[key] is not None:
                 querystring += key + "=" + urlencode(str(args[key])) + "&"
         baseURL     = request.base_url + "?" + querystring
-        firstURL    = baseURL
+        print(baseURL)
+        firstURL    = baseURL + 'limit=' + str(limit) + "&"
         lastURL     = baseURL
         prevURL     = baseURL
         nextURL     = baseURL
 
         if offset - limit > 0: # if there's nothing previous then it's just the original url
             prevURL += 'offset=' + str((offset - limit)) + '&limit=' + str(limit) + "&"
-        elif offset - limit == 0:
+        else:
             prevURL += 'limit=' + str(limit) + "&"
 
         if offset + limit < qsize:
@@ -509,7 +592,7 @@ def pagination(request, args, record):
                 lastURL = nextURL
             else:
                 nextURL += 'limit=' + str(limit) + "&"
-                lastURL += 'offset=' + str((qsize - limit)) + '&limit=' + str(limit) + "&"
+                lastURL += 'offset=' + str((qsize - (qsize % limit))) + '&limit=' + str(limit) + "&"
         else:
             nextURL = None
             lastURL = None
@@ -518,7 +601,6 @@ def pagination(request, args, record):
         if lastURL  is not None : lastURL = lastURL[:-1]
         if prevURL  is not None : prevURL = prevURL[:-1]
         if nextURL  is not None : nextURL = nextURL[:-1]
-
 
         return record, {
             'href'  : request.url,
@@ -543,15 +625,11 @@ def pagination(request, args, record):
 # -- Movie --
 # movie_parser
 imdb_score_parser = reqparse.RequestParser()
-# imdb_score_parser.add_argument('num_critic_for_reviews', type=int, help="Number of Critic Reviews")
-imdb_score_parser.add_argument('director_facebook_likes', type=int, help="Number of Facebook Likes for Director")
-imdb_score_parser.add_argument('actor_1_facebook_likes', type=int, help="Number of Facebook likes for Actor 1")
-imdb_score_parser.add_argument('actor_2_facebook_likes', type=int, help="Number of Facebook likes for Actor 2")
-# imdb_score_parser.add_argument('num_voted_users', type=int, help="Number of votes by users")
-imdb_score_parser.add_argument('cast_total_facebook_likes', type=int, help="Total number of Facebook likes for cast")
-# imdb_score_parser.add_argument('num_user_for_reviews', type=int, , help="")
-imdb_score_parser.add_argument('budget', type=int, help="Budget")
-imdb_score_parser.add_argument('movie_facebook_likes', type=int, help="Number of Facebook likes on the movie")
+imdb_score_parser.add_argument('director_name', type=str, help="Director Name", required=True)
+imdb_score_parser.add_argument('actor_1_name', type=str, help="Name of Actor (required)", required=True)
+imdb_score_parser.add_argument('actor_2_name', type=str, help="Name of Actor (optional)", required=False)
+imdb_score_parser.add_argument('actor_3_name', type=str, help="Name of Actor (optional)", required=False)
+imdb_score_parser.add_argument('budget', type=int, help="Budget", required=True)
 
 @api.route('/imdb_score_prediction')
 class IMDBScorePredictor(Resource):
@@ -561,19 +639,169 @@ class IMDBScorePredictor(Resource):
     @api.response(400, 'Bad request. Incorrect syntax.')
     @api.response(404, 'Not found. Collection not found.')
     def get(self):
+        global analytics
+        global directorDF
+        global actorDF
+        global analytics_api_call_count
+
+
+        director_record = directorDF
+        actor_record    = actorDF
+        analytics_api_call_count['score predictor'] += 1
         args = imdb_score_parser.parse_args()
-        director_facebook_likes = args['director_facebook_likes']
-        actor_1_facebook_likes = args['actor_1_facebook_likes']
-        cast_total_facebook_likes = args['cast_total_facebook_likes']
+        
+        # budget
         budget = args['budget']
-        actor_2_facebook_likes = args['actor_2_facebook_likes']
-        movie_facebook_likes = args['movie_facebook_likes']
+
+        # DIRECTOR 
+        director = args['director_name'].lower().strip('\'').strip('\"')
+        q = 'director_name == \'' + director + '\''
+        director = director_record.query(q)
+        
+        if director_record.empty:
+            return {
+                'error': 'Not Found',
+                'message': 'Director Not Found'
+            }, 404
+        director_likes = director['facebook_likes'].iloc[0]
+        
+        # ACTOR 1
+        actor1 = args['actor_1_name'].lower().strip('\'').strip('\"')
+        q = 'actor_name == \'' + actor1 + '\''
+        actor1 = actor_record.query(q)
+        if actor1.empty:
+            return {
+                'error': 'Not Found',
+                'message': 'Actor 1 Not Found'
+            }, 404
+        actor1_likes = actor1['facebook_likes'].iloc[0]        
+
+        # ACTOR 2
+        if 'actor_2_name' in args and args['actor_2_name'] is not None:
+            actor2 = args['actor_2_name'].lower().strip('\'').strip('\"')
+            q = 'actor_name == \'' + actor2 + '\''
+            actor2 = actor_record.query(q)
+            if actor2.empty:
+                return {
+                    'error': 'Not Found',
+                    'message': 'Actor 2 Not Found'
+                }, 404
+            actor2_likes = actor2['facebook_likes'].iloc[0]
+        else :
+            actor2_likes = actor_average
+
+        # ACTOR 3
+        if 'actor_3_name' in args and args['actor_3_name'] is not None:
+            actor3 = args['actor_3_name'].lower().strip('\'').strip('\"')
+            q = 'actor_name == \'' + actor3 + '\''
+            actor3 = actor_record.query(q)
+            if actor3.empty:
+                return {
+                    'error': 'Not Found',
+                    'message': 'Actor 3 Not Found'
+                }, 404
+            actor3_likes = actor3['facebook_likes'].iloc[0]
+        else :
+            actor3_likes = actor_average
 
         return {
-            'movie_prediction_score': predict_score(director_facebook_likes,actor_1_facebook_likes,cast_total_facebook_likes,budget,actor_2_facebook_likes,movie_facebook_likes)
+            'movie_prediction_score': predict_score(director_likes,actor1_likes,actor2_likes,actor3_likes,budget)[1:-1]
         }, 200
 
 
+@api.route('/analytics_api_call_count')
+class Analytics(Resource):
+    @api.doc('get_analytics')
+    # @api.expect(analytics_parser)
+    @api.response(200, 'Success. Collection entries retrieved.')
+    @api.response(400, 'Bad request. Incorrect syntax.')
+    @api.response(404, 'Not found. Collection not found.')
+    def get(self):
+        global analytics_api_call_count
+        # print(json.dumps(analytics))
+        response = { "href": "http://127.0.0.1:5000/analytics_api_call_count",
+                    "results_shown": len(analytics_api_call_count),
+                    "total_results": len(analytics_api_call_count),
+                    "analytics_api_call_count": ""
+                }
+        response['analytics_api_call_count'] = analytics_api_call_count
+        return response, 200
+
+
+@api.route('/analytics_top_actor')
+class TopActorAnalytics(Resource):
+    @api.doc('get_analytics_top_actor')
+    @api.response(200, 'Success. Collection entries retrieved.')
+    @api.response(400, 'Bad request. Incorrect syntax.')
+    @api.response(404, 'Not found. Collection not found.')
+    def get(self):
+        global top_actor
+        # print(top_actor)
+        # sorted(top_actor, key=numbermap.__getitem__)
+        response = { "href": "http://127.0.0.1:5000/analytics_top_actor",
+                    "results_shown": len(top_actor),
+                    "total_results": len(top_actor),
+                    "analytics_top_actor": ""
+                }
+        response['analytics_top_actor'] = top_actor
+        return response, 200
+
+
+@api.route('/analytics_top_movie')
+class TopMovieAnalytics(Resource):
+    @api.doc('get_analytics_top_movie')
+    @api.response(200, 'Success. Collection entries retrieved.')
+    @api.response(400, 'Bad request. Incorrect syntax.')
+    @api.response(404, 'Not found. Collection not found.')
+    def get(self):
+        global top_movie
+        # print(top_actor)
+        # sorted(top_actor, key=numbermap.__getitem__)
+        response = { "href": "http://127.0.0.1:5000/analytics_top_movie",
+                    "results_shown": len(top_movie),
+                    "total_results": len(top_movie),
+                    "analytics_top_movie": ""
+                }
+        response['analytics_top_movie'] = top_movie
+        return response, 200
+
+
+@api.route('/analytics_top_director')
+class TopMovieAnalytics(Resource):
+    @api.doc('get_analytics_top_director')
+    @api.response(200, 'Success. Collection entries retrieved.')
+    @api.response(400, 'Bad request. Incorrect syntax.')
+    @api.response(404, 'Not found. Collection not found.')
+    def get(self):
+        global top_director
+        # print(top_actor)
+        # sorted(top_actor, key=numbermap.__getitem__)
+        response = { "href": "http://127.0.0.1:5000/analytics_top_director",
+                    "results_shown": len(top_director),
+                    "total_results": len(top_director),
+                    "analytics_top_director": ""
+                }
+        response['analytics_top_director'] = top_director
+        return response, 200
+
+
+@api.route('/analytics_top_screenwriter')
+class TopScreenwriterAnalytics(Resource):
+    @api.doc('get_analytics_top_screenwriter')
+    @api.response(200, 'Success. Collection entries retrieved.')
+    @api.response(400, 'Bad request. Incorrect syntax.')
+    @api.response(404, 'Not found. Collection not found.')
+    def get(self):
+        global top_screenwriter
+        # print(top_actor)
+        # sorted(top_actor, key=numbermap.__getitem__)
+        response = { "href": "http://127.0.0.1:5000/analytics_top_director",
+                    "results_shown": len(top_screenwriter),
+                    "total_results": len(top_screenwriter),
+                    "analytics_top_screenwriter": ""
+                }
+        response['analytics_top_screenwriter'] = top_screenwriter
+        return response, 200
 # # Example only
 # tasks = {
 #     'task1': {
@@ -603,12 +831,12 @@ class IMDBScorePredictor(Resource):
 #                 'message': 'Collection was not found'
 #             }, 404
 
-#         return { 
+#         return {
 #             'task_id': taskid,
 #             'task_information': tasks[taskid]
 #         }, 200
-    
-    
+
+
 #     @api.doc('delete_a_task')
 #     @api.response(200, 'Success. Collection was deleted.')
 #     @api.response(404, 'Not found. Collection was not found')
@@ -623,14 +851,58 @@ class IMDBScorePredictor(Resource):
 #         del tasks[taskid]
 
 #         if taskid not in tasks:
-#             return { 
+#             return {
 #                 'message': 'Collection deleted successfully.'
 #             }, 200
 
 # APP ROUTING FUNCTIONS
-@app.route('/home', methods=['GET'])
+@app.route('/application/home', methods=['GET'])
 def index():
-    return render_template('index.html')
+
+    return render_template('index.html', directors=list(directorDF['director_name']),
+                                         actors=list(actorDF['actor_name']),
+                                         genres=list(genresDF['genres']))
+
+@app.route('/application/imdbscoreprediction_ui', methods=['GET'])
+def imdbscoreprediction_ui():
+
+    return render_template('imdbscoreprediction.html', directors=list(directorDF['director_name']),
+                                         actors=list(actorDF['actor_name']),
+                                         genres=list(genresDF['genres']))
+
+@app.route('/application/genres_ui', methods=['GET'])
+def genres_ui():
+
+    return render_template('genres.html', genres=list(genresDF['genres']))
+
+@app.route('/application/directors_ui', methods=['GET'])
+def directors_ui():
+
+    return render_template('directors.html')
+
+@app.route('/application/actors_ui', methods=['GET'])
+def actors_ui():
+
+    return render_template('actors.html')
+
+@app.route('/application/keywords_ui', methods=['GET'])
+def keywords_ui():
+
+    return render_template('keywords.html')
+
+@app.route('/application/movies_ui', methods=['GET'])
+def movies_ui():
+
+    return render_template('movies.html')
+
+@app.route('/application/screenwriters_ui', methods=['GET'])
+def screenwriters_ui():
+
+    return render_template('screenwriters.html')
+
+
 
 if __name__ == '__main__':
-    app.run(debug=True, use_reloader=True, ssl_context='adhoc')
+
+  
+app.run(debug=True, use_reloader=True, ssl_context='adhoc')
