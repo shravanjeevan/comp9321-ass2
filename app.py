@@ -900,4 +900,4 @@ def screenwriters_ui():
 
 
 if __name__ == '__main__':
-    app.run(debug=True, use_reloader=True, ssl_context='adhoc')
+    app.run(debug=True, use_reloader=True)
