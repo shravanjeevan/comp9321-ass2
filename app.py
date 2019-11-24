@@ -25,17 +25,13 @@ api = Api(app, title='COMP9321 Assignment 2 - API Documentation', validate=True)
 dirname = os.path.dirname(__file__)
 analytics_path = os.path.join(dirname, 'analytics.csv')
 
-def updateCSV(apiUsage):
-    df = pd.DataFrame.from_dict(apiUsage)
-    # print(df)
+def updateCSV(apiUsage): 
+    df = pd.DataFrame.from_dict(apiUsage, orient='columns')
     df.to_csv(analytics_path, index=False)
     
 def loadCSV():
     analytics_api_call_count = pd.read_csv(analytics_path)
-    analytics_api_call_count['actors'] += 1
-   
-    updateCSV(analytics_api_call_count)
-    return  analytics_api_call_count.iloc[0].to_dict()
+    return  analytics_api_call_count.to_dict()
 
 # GLOBAL VARIABLES
 actor_average, directorDF, screenwriterDF, actorDF, keywordsDF, genresDF, movieDF = process_dataset2()
@@ -138,7 +134,8 @@ class Actors(Resource):
         global actorDF
         global analytics_api_call_count
         global top_actor
-        analytics_api_call_count['actors'] += 1
+        analytics_api_call_count['actors'][0]+= 1
+        updateCSV(analytics_api_call_count)
         args = actors_parser.parse_args()
         actor_record = actorDF
 
@@ -203,7 +200,9 @@ class SpecificActor(Resource):
     @api.response(500, 'Internal Service Error.')
     def get(self, actor_id):
         global analytics_api_call_count
-        analytics_api_call_count['specific actor'] += 1
+        analytics_api_call_count['specific actor'][0]+= 1
+        updateCSV(analytics_api_call_count)
+
         if not actorDF.index.isin([actor_id]).any():
             return {
                 'error': 'Not Found',
@@ -262,7 +261,8 @@ class Director(Resource):
         global directorDF
         global analytics_api_call_count
         global top_director
-        analytics_api_call_count['directors'] += 1
+        analytics_api_call_count['directors'][0] += 1
+        updateCSV(analytics_api_call_count)
 
         args = director_parser.parse_args()
         director_record = directorDF
@@ -305,7 +305,9 @@ class SpecificDirector(Resource):
     @api.response(404, 'Not found. Collection not found.')
     def get(self, director_id):
         global analytics_api_call_count
-        analytics_api_call_count['specific director'] += 1
+        analytics_api_call_count['specific director'][0] += 1
+        updateCSV(analytics_api_call_count)
+
         if not directorDF.index.isin([director_id]).any():
             return {
                 'error': 'Not Found',
@@ -339,7 +341,9 @@ class Genres(Resource):
     def get(self):
         global genresDF
         global analytics_api_call_count
-        analytics_api_call_count['genres'] += 1
+        analytics_api_call_count['genres'][0] += 1
+        updateCSV(analytics_api_call_count)
+
         genres_record = genresDF
         args = genre_parser.parse_args()
         genres_record, response_message, response_code = pagination(request, args, genres_record)
@@ -387,7 +391,9 @@ class IMDBScorePredictor(Resource):
 
         director_record = directorDF
         actor_record    = actorDF
-        analytics_api_call_count['score predictor'] += 1
+        analytics_api_call_count['score predictor'][0]+= 1
+        updateCSV(analytics_api_call_count)
+
         args = imdb_score_parser.parse_args()
 
         # budget
@@ -469,7 +475,9 @@ class Keywords(Resource):
     def get(self):
         global keywordsDF
         global analytics_api_call_count
-        analytics_api_call_count['keywords'] += 1
+        analytics_api_call_count['keywords'][0]+= 1
+        updateCSV(analytics_api_call_count)
+
         keywords_record = keywordsDF
         args = keyword_parser.parse_args()
         keywords_record, response_message, response_code = pagination(request, args, keywords_record)
@@ -519,7 +527,9 @@ class Movies(Resource):
         global movieDF
         global analytics_api_call_count
         global top_movie
-        analytics_api_call_count['movies'] += 1
+        analytics_api_call_count['movies'][0]+= 1
+        updateCSV(analytics_api_call_count)
+
         movie_record = movieDF
         expr = '(?=.*{})'
         args = movie_parser.parse_args()
@@ -594,7 +604,9 @@ class SpecificMovie(Resource):
     @api.response(500, 'Internal Service Error.')
     def get(self, movie_id):
         global analytics_api_call_count
-        analytics_api_call_count['specific movie'] += 1
+        analytics_api_call_count['specific movie'][0]+= 1
+        updateCSV(analytics_api_call_count)
+
         if not movieDF.index.isin([movie_id]).any():
             return {
                 'error': 'Not Found',
@@ -631,7 +643,8 @@ class Screenwriter(Resource):
     def get(self):
         global screenwriterDF
         global analytics_api_call_count
-        analytics_api_call_count['screenwriters'] += 1
+        analytics_api_call_count['screenwriters'][0]+= 1
+        updateCSV(analytics_api_call_count)
 
         args = writer_parser.parse_args()
         writer_record = screenwriterDF
@@ -695,7 +708,9 @@ class SpecificScreenwriter(Resource):
     def get(self, screenwriter_id):
         global analytics_api_call_count
         global top_screenwriter
-        analytics_api_call_count['specific screenwriter'] += 1
+        analytics_api_call_count['specific screenwriter'][0]+= 1
+        updateCSV(analytics_api_call_count)
+
         if not screenwriterDF.index.isin([screenwriter_id]).any():
         
             return {
