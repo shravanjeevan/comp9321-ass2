@@ -56,6 +56,39 @@ directorDF, screenwriterDF, actorDF, keywordsDF, genresDF, movieDF = process_dat
 
 # API ENDPOINT DEFINTIONS
 
+# -- Register --
+# register_parser
+register_parser = reqparse.RequestParser()
+register_parser.add_argument('username', type=str, help="Input your desired username")
+register_parser.add_argument('password', type=str, help="Input your desired password")
+
+@api.route('/register')
+class Register(Resource):
+    @api.doc('register_account')
+    @api.expect(register_parser)
+    @api.response(200, 'Success. registered successfully.')
+    def get(self):
+        return {
+                'message': 'Success. registered successfully.'
+            }, 200
+
+# -- Login --
+# login_parser
+login_parser = reqparse.RequestParser()
+login_parser.add_argument('username', type=str, help="Input your desired username")
+login_parser.add_argument('password', type=str, help="Input your desired password")
+
+@api.route('/login')
+class Login(Resource):
+    @api.doc('register_account')
+    @api.expect(register_parser)
+    @api.response(200, 'Success. logged in successfully')
+    def get(self):
+        return {
+                'message': 'Success. logged in successfully',
+                'token' : 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9'
+            }, 200
+
 # -- Actors --
 # actors_parser
 actors_parser = reqparse.RequestParser()
@@ -63,12 +96,15 @@ actors_parser.add_argument('name', type=str, help="Name of the actor queried")
 actors_parser.add_argument('gender', type=str, choices=('M', 'F', 'O'), help="Actor gender")
 actors_parser.add_argument('offset', type=int, help="offset given")
 actors_parser.add_argument('limit', type=int, help="number of results to return")
+actors_parser.add_argument('token', type=str, help="token, use your login and login at /login for a token,"
+                                                   "if you don't have a login, you can register at /register ")
 
 @api.route('/actors')
 class Actors(Resource):
     @api.doc('get_actors')
     @api.expect(actors_parser)
     @api.response(200, 'Success. Collection entries retrieved.')
+    @api.response(401, 'Unauthorised. Invalid token')
     # @api.response(400, 'Bad request. Incorrect syntax.')
     @api.response(404, 'Not found. Collection not found.')
     def get(self):
@@ -76,6 +112,12 @@ class Actors(Resource):
 
         args = actors_parser.parse_args()
         actor_record = actorDF
+
+        if 'token' not in args or args['token'] != 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9':
+            return {
+                'error': 'Unauthorised',
+                'message': ' Invalid token'
+            }, 401
 
         # If name param is set
         if 'name' in args and args['name'] is not None:
