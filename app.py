@@ -21,7 +21,7 @@ app = Flask(__name__)
 api = Api(app, title='COMP9321 Assignment 2 - API Documentation', validate=True)
 
 # GLOBAL VARIABLES
-directorDF, screenwriterDF, actorDF, keywordsDF, genresDF, movieDF = process_dataset2()
+actor_average, directorDF, screenwriterDF, actorDF, keywordsDF, genresDF, movieDF = process_dataset2()
 analytics_api_call_count = {
     'actors': 0,
     'specific actor': 0,
@@ -89,6 +89,46 @@ top_screenwriter = dict()
 
 # API ENDPOINT DEFINTIONS
 
+# -- Register --
+# register_parser
+register_parser = reqparse.RequestParser()
+register_parser.add_argument('username', type=str, help="Input your desired username")
+register_parser.add_argument('password', type=str, help="Input your desired password")
+
+@api.route('/register', methods=['GET'])
+class Register(Resource):
+    @api.doc('register_account')
+    @api.expect(register_parser)
+    @api.response(200, 'Success. registered successfully.')
+    @api.response(400, 'Failed, missing args')
+    def get(self):
+        args = writer_parser.parse_args()
+        if "username" not in args or "password" not in args:
+            return {
+                'error': 'missing args',
+                'message': 'Failed, missing args'
+            }, 400
+        return {
+                'message': 'Success. registered successfully.'
+            }, 200
+
+# -- Login --
+# login_parser
+login_parser = reqparse.RequestParser()
+login_parser.add_argument('username', type=str, help="Input your desired username")
+login_parser.add_argument('password', type=str, help="Input your desired password")
+
+@api.route('/login', methods=['GET'])
+class Login(Resource):
+    @api.doc('register_account')
+    @api.expect(register_parser)
+    @api.response(200, 'Success. logged in successfully')
+    def get(self):
+        return {
+                'message': 'Success. logged in successfully',
+                'token' : 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9'
+            }, 200
+
 # -- Actors --
 # actors_parser
 actors_parser = reqparse.RequestParser()
@@ -96,12 +136,15 @@ actors_parser.add_argument('name', type=str, help="Name of the actor queried")
 actors_parser.add_argument('gender', type=str, choices=('M', 'F', 'O'), help="Actor gender")
 actors_parser.add_argument('offset', type=int, help="offset given")
 actors_parser.add_argument('limit', type=int, help="number of results to return")
+actors_parser.add_argument('token', type=str, help="token, use your login and login at /login for a token,"
+                                                   "if you don't have a login, you can register at /register ")
 
 @api.route('/actors', doc={"description" : "Actors 123"})
 class Actors(Resource):
     @api.doc('get_actors')
     @api.expect(actors_parser)
     @api.response(200, 'Success. Collection entries retrieved.')
+    @api.response(401, 'Unauthorised. Invalid token')
     # @api.response(400, 'Bad request. Incorrect syntax.')
     @api.response(404, 'Not found. Collection not found.')
     def get(self):
@@ -111,6 +154,12 @@ class Actors(Resource):
         analytics_api_call_count['actors'] += 1
         args = actors_parser.parse_args()
         actor_record = actorDF
+
+        if 'token' not in args or args['token'] != 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9':
+            return {
+                'error': 'Unauthorised',
+                'message': ' Invalid token'
+            }, 401
 
         # If name param is set
         if 'name' in args and args['name'] is not None:
@@ -505,7 +554,6 @@ class Genres(Resource):
         return response, 200
 
 
-
 def pagination(request, args, record):
 
         offset = 0
@@ -554,7 +602,6 @@ def pagination(request, args, record):
         if prevURL  is not None : prevURL = prevURL[:-1]
         if nextURL  is not None : nextURL = nextURL[:-1]
 
-
         return record, {
             'href'  : request.url,
             'offset': offset,
@@ -578,15 +625,11 @@ def pagination(request, args, record):
 # -- Movie --
 # movie_parser
 imdb_score_parser = reqparse.RequestParser()
-# imdb_score_parser.add_argument('num_critic_for_reviews', type=int, help="Number of Critic Reviews")
-imdb_score_parser.add_argument('director_facebook_likes', type=int, help="Number of Facebook Likes for Director", required=True)
-imdb_score_parser.add_argument('actor_1_facebook_likes', type=int, help="Number of Facebook likes for Actor 1", required=True)
-imdb_score_parser.add_argument('actor_2_facebook_likes', type=int, help="Number of Facebook likes for Actor 2", required=True)
-# imdb_score_parser.add_argument('num_voted_users', type=int, help="Number of votes by users")
-imdb_score_parser.add_argument('actor_3_facebook_likes', type=int, help="Number of Facebook likes for Actor 3", required=True)
-# imdb_score_parser.add_argument('num_user_for_reviews', type=int, , help="")
+imdb_score_parser.add_argument('director_name', type=str, help="Director Name", required=True)
+imdb_score_parser.add_argument('actor_1_name', type=str, help="Name of Actor (required)", required=True)
+imdb_score_parser.add_argument('actor_2_name', type=str, help="Name of Actor (optional)", required=False)
+imdb_score_parser.add_argument('actor_3_name', type=str, help="Name of Actor (optional)", required=False)
 imdb_score_parser.add_argument('budget', type=int, help="Budget", required=True)
-# imdb_score_parser.add_argument('movie_facebook_likes', type=int, help="Number of Facebook likes on the movie", required=True)
 
 @api.route('/imdb_score_prediction')
 class IMDBScorePredictor(Resource):
@@ -596,20 +639,73 @@ class IMDBScorePredictor(Resource):
     @api.response(400, 'Bad request. Incorrect syntax.')
     @api.response(404, 'Not found. Collection not found.')
     def get(self):
+        global analytics
+        global directorDF
+        global actorDF
         global analytics_api_call_count
+
+
+        director_record = directorDF
+        actor_record    = actorDF
         analytics_api_call_count['score predictor'] += 1
         args = imdb_score_parser.parse_args()
-        director_facebook_likes = args['director_facebook_likes']
-        actor_1_facebook_likes = args['actor_1_facebook_likes']
-        actor_2_facebook_likes = args['actor_2_facebook_likes']
-        actor_3_facebook_likes = args['actor_3_facebook_likes']
-        # cast_total_facebook_likes = args['cast_total_facebook_likes']
+        
+        # budget
         budget = args['budget']
 
-        # movie_facebook_likes = args['movie_facebook_likes']
+        # DIRECTOR 
+        director = args['director_name'].lower().strip('\'').strip('\"')
+        q = 'director_name == \'' + director + '\''
+        director = director_record.query(q)
+        
+        if director_record.empty:
+            return {
+                'error': 'Not Found',
+                'message': 'Director Not Found'
+            }, 404
+        director_likes = director['facebook_likes'].iloc[0]
+        
+        # ACTOR 1
+        actor1 = args['actor_1_name'].lower().strip('\'').strip('\"')
+        q = 'actor_name == \'' + actor1 + '\''
+        actor1 = actor_record.query(q)
+        if actor1.empty:
+            return {
+                'error': 'Not Found',
+                'message': 'Actor 1 Not Found'
+            }, 404
+        actor1_likes = actor1['facebook_likes'].iloc[0]        
+
+        # ACTOR 2
+        if 'actor_2_name' in args and args['actor_2_name'] is not None:
+            actor2 = args['actor_2_name'].lower().strip('\'').strip('\"')
+            q = 'actor_name == \'' + actor2 + '\''
+            actor2 = actor_record.query(q)
+            if actor2.empty:
+                return {
+                    'error': 'Not Found',
+                    'message': 'Actor 2 Not Found'
+                }, 404
+            actor2_likes = actor2['facebook_likes'].iloc[0]
+        else :
+            actor2_likes = actor_average
+
+        # ACTOR 3
+        if 'actor_3_name' in args and args['actor_3_name'] is not None:
+            actor3 = args['actor_3_name'].lower().strip('\'').strip('\"')
+            q = 'actor_name == \'' + actor3 + '\''
+            actor3 = actor_record.query(q)
+            if actor3.empty:
+                return {
+                    'error': 'Not Found',
+                    'message': 'Actor 3 Not Found'
+                }, 404
+            actor3_likes = actor3['facebook_likes'].iloc[0]
+        else :
+            actor3_likes = actor_average
 
         return {
-            'movie_prediction_score': predict_score(director_facebook_likes,actor_1_facebook_likes,actor_2_facebook_likes,actor_3_facebook_likes,budget)
+            'movie_prediction_score': predict_score(director_likes,actor1_likes,actor2_likes,actor3_likes,budget)[1:-1]
         }, 200
 
 
@@ -813,4 +909,6 @@ def screenwriters_ui():
 
 
 if __name__ == '__main__':
-    app.run(debug=True, use_reloader=True)
+
+  
+app.run(debug=True, use_reloader=True, ssl_context='adhoc')
