@@ -22,6 +22,53 @@
 <br> </br>
 <center>
   <h1> Screenwriters </h1>
-
+  <pr> Press button below to get the list of screenwriters.
+  <br> </br>
+  <form action="/application/screenwriters_ui" method="post">
+  Screenwriter Name : </name><input type='text' name='name'> 
+  <button type="submit" class="btn btn-primary">Get Screenwriters</button>
+  </form>
 </center>
+  
+  <br/>
+  {% if screenwriters_dict is defined %}
+  <div class="row justify-content-center">
+    <div class="col-4 text-center">
+      <p><b>Total Number of Screenwriters: </b>{{screenwriters_dict['total_results']}}</p>
+      <div class="row">
+          <div class="col">
+            {% if screenwriters_dict['prev'] is defined and screenwriters_dict['next'] is defined %}
+              {%if screenwriters_dict['prev']['href'] != None%}
+              <span>
+                  <form action="/application/screenwriters_ui" method="post">
+                    <input type='hidden' name='url' value={{screenwriters_dict['prev']['href']}} >
+                    <button type="submit" class="btn btn-primary">Previous</button>
+                  </form>
+              </span>
+                {% endif %}
+                {%if screenwriters_dict['next']['href'] != None%}
+            
+                <span>
+                  <form action="/application/screenwriters_ui" method="post">
+                    <input type='hidden' name='url' value={{screenwriters_dict['next']['href']}} >
+                    <button type="submit" class="btn btn-primary">Next</button>
+                  </form>              
+              </span>
+                {% endif %}
+            {% endif %}
+          </div>
+        </div>
+        <ul class="list-group">
+          {% for key in screenwriters_dict['writers'] %}
+          <li class="list-group-item">{{screenwriters_dict['writers'][key]['writer_name']}}</li>  
+          {% endfor %}
+          {% for key in screenwriters_dict['writer'] %}
+          <li class="list-group-item">{{screenwriters_dict['writer'][key]['writer_name']}}</li>  
+          {% endfor %}
+        </ul>
+  
+    </div>
+  </div>
+  
+  {% endif %}
 {% endblock %}

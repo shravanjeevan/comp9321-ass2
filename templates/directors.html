@@ -22,6 +22,61 @@
 <br> </br>
 <center>
   <h1> Directors </h1>
-
+  <pr> Press button below to get the list of directors.
+  <br> </br>
+  <form action="/application/directors_ui" method="post">
+  Director Name : </name><input type='text' name='name'> 
+  <button type="submit" class="btn btn-primary">Get Directors</button>
+  </form>
 </center>
+  
+  <br/>
+  {% if directors_dict is defined %}
+  <!-- {{directors_dict}} -->
+  <div class="row justify-content-center">
+    <div class="col-4 text-center">
+      <p><b>Total Number of Directors: </b>{{directors_dict['total_results']}}</p>
+      <div class="row">
+          <div class="col">
+            {% if directors_dict['prev'] is defined and directors_dict['next'] is defined %}
+              {%if directors_dict['prev']['href'] != None%}
+              <span>
+                  <form action="/application/directors_ui" method="post">
+                    <input type='hidden' name='url' value={{directors_dict['prev']['href']}} >
+                    <button type="submit" class="btn btn-primary">Previous</button>
+                  </form>
+              </span>
+                {% endif %}
+                {%if directors_dict['next']['href'] != None%}
+            
+                <span>
+                  <form action="/application/directors_ui" method="post">
+                    <input type='hidden' name='url' value={{directors_dict['next']['href']}} >
+                    <button type="submit" class="btn btn-primary">Next</button>
+                  </form>              
+              </span>
+                {% endif %}
+            {% endif %}
+          </div>
+        </div>
+        <ul class="list-group">
+          {% for key in directors_dict['directors'] %}
+            <div class="d-flex w-100 justify-content-between">
+              <h5 class="mb-1">{{directors_dict['directors'][key]['director_name']}}</h5>
+              <small>likes : {{directors_dict['directors'][key]['facebook_likes']}}</small>
+            </div>
+          {% endfor %}
+          {% for key in directors_dict['director'] %}
+          <div class="d-flex w-100 justify-content-between">
+            <h5 class="mb-1">{{directors_dict['director'][key]['director_name']}}</h5>
+            <small>likes : {{directors_dict['director'][key]['facebook_likes']}}</small>
+          </div>
+        {% endfor %}
+        </ul>
+  
+    </div>
+  </div>
+  
+  {% endif %}
+  
 {% endblock %}

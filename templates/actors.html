@@ -22,6 +22,73 @@
 <br> </br>
 <center>
   <h1> Actors </h1>
-
+  <pr> Press button below to get the list of actors.
+  <br> </br>
+  <form action="/application/actors_ui" method="post">
+  Director Name : <input type='text' name='name'> 
+  <br/>
+  <br/>
+  Gender : 
+  <select name="gender">
+    <option value=""></option>
+    <option value="M">M</option>
+    <option value="F">F</option>
+    <option value="O">O</option>
+  </select>
+  <br/>
+  <br/>
+  <button type="submit" class="btn btn-primary">Get Actors</button>
+  </form>
 </center>
+  
+  <br/>
+  {% if actors_dict is defined %}
+  <div class="row justify-content-center">
+    <div class="col-4 text-center">
+      <p><b>Total Number of Actors: </b>{{actors_dict['total_results']}}</p>
+      <div class="row">
+          <div class="col">
+            {% if actors_dict['prev'] is defined and actors_dict['next'] is defined %}
+              {%if actors_dict['prev']['href'] != None%}
+              <span>
+                  <form action="/application/actors_ui" method="post">
+                    <input type='hidden' name='url' value={{actors_dict['prev']['href']}} >
+                    <button type="submit" class="btn btn-primary">Previous</button>
+                  </form>
+              </span>
+                {% endif %}
+                {%if actors_dict['next']['href'] != None%}
+            
+                <span>
+                  <form action="/application/actors_ui" method="post">
+                    <input type='hidden' name='url' value={{actors_dict['next']['href']}} >
+                    <button type="submit" class="btn btn-primary">Next</button>
+                  </form>              
+              </span>
+                {% endif %}
+            {% endif %}
+          </div>
+        </div>
+        <ul class="list-group">
+          {% for key in actors_dict['actors'] %}
+          <div class="d-flex w-100 justify-content-between">
+            <h5 class="mb-1">{{actors_dict['actors'][key]['actor_name']}}</h5>
+           </div>
+           <small>likes : {{actors_dict['actors'][key]['facebook_likes']}}</small>
+           <small>gender : {{actors_dict['actors'][key]['gender']}}</small>
+       
+           {% endfor %}
+           {% for key in actors_dict['actor'] %}
+           <div class="d-flex w-100 justify-content-between">
+             <h5 class="mb-1">{{actors_dict['actor'][key]['actor_name']}}</h5>
+            </div>
+            <small>likes : {{actors_dict['actor'][key]['facebook_likes']}}</small>
+            <small>gender : {{actors_dict['actor'][key]['gender']}}</small>
+        
+            {% endfor %}
+        </ul>
+  
+    </div>
+  </div>
+  {% endif %}
 {% endblock %}

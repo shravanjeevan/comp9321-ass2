@@ -22,6 +22,114 @@
 <br> </br>
 <center>
   <h1> Movies </h1>
+  <pr> Press button below to get the list of movies.
+    To input multiple, input with commas
+  <br> </br>
+  <form class="form-group" action="/application/movies_ui" method="post">
+  Movie Name : <input type='text' name='name'> 
+  <div class="form-group">
+      <label for="Actor">Actor</label>
+      <select name="actor" class="form-control">
+          <option value=""></option>
+        {% for dir in actors %}
+         <option value="{{dir}}">{{dir}}</option>
+        {% endfor %}
+      </select>
+      <small id="actorHelp" class="form-text text-muted">Please select the actor of your film</small>
+  </div>
 
+  <div class="form-group">
+      <label for="Director">Director</label>
+      <select name="director" class="form-control">
+          <option value=""></option>
+        {% for dir in directors %}
+         <option value="{{dir}}">{{dir}}</option>
+        {% endfor %}
+      </select>
+      <small id="directorHelp" class="form-text text-muted">Please select the director of your film</small>
+      </div>
+  <div class="form-group">
+      <label for="Screenwriter">Screenwriter</label>
+      <select name="screenwriter" class="form-control">
+          <option value=""></option>
+        {% for dir in screenwriter %}
+          <option value="{{dir}}">{{dir}}</option>
+        {% endfor %}
+      </select>
+      <small id="screenwriterHelp" class="form-text text-muted">Please select the screenwriter of your film</small>
+      </div>
+
+      <div class="form-group">
+      <label for="Keyword">Keyword</label>
+      <select name="keyword" class="form-control">
+          <option value=""></option>
+        {% for dir in keywords %}
+          <option value="{{dir}}">{{dir}}</option>
+        {% endfor %}
+      </select>
+      <small id="keywordHelp" class="form-text text-muted">Please select the keyword of your film</small>
+      </div>
+      <div class="form-group">
+          <label for="Genre">Genre</label>
+          <select name="genre" class="form-control">
+              <option value=""></option>
+            {% for dir in genres %}
+              <option value="{{dir}}">{{dir}}</option>
+            {% endfor %}
+          </select>
+          <small id="genreHelp" class="form-text text-muted">Please select the genre of your film</small>
+          </div>
+
+  budget : <input type='number' name='budget'> 
+  <br/>
+  <br/>
+  revenue : <input type='number' name='revenue'> 
+  <br/>
+  <br/>
+  <button type="submit" class="btn btn-primary">Get Movies</button>
+  </form>
 </center>
+  <br/>
+  {% if movie_dict is defined %}
+  <div class="row justify-content-center">
+    <div class="col-4 text-center">
+      <p><b>Total Number of Movies: </b>{{movie_dict['total_results']}}</p>
+      <div class="row">
+          <div class="col">
+            {% if movie_dict['prev'] is defined and movie_dict['next'] is defined %}
+              {%if movie_dict['prev']['href'] != None%}
+              <span>
+                  <form action="/application/movies_ui" method="post">
+                    <input type='hidden' name='url' value={{movie_dict['prev']['href']}} >
+                    <button type="submit" class="btn btn-primary">Previous</button>
+                  </form>
+              </span>
+                {% endif %}
+                {%if movie_dict['next']['href'] != None%}
+            
+                <span>
+                  <form action="/application/movies_ui" method="post">
+                    <input type='hidden' name='url' value={{movie_dict['next']['href']}} >
+                    <button type="submit" class="btn btn-primary">Next</button>
+                  </form>              
+              </span>
+                {% endif %}
+            {% endif %}
+          </div>
+        </div>
+        <ul class="list-group">
+          {% for key in movie_dict['movies'] %}
+          <li class="list-group-item">{{movie_dict['movies'][key]['title']}}</li>  
+       
+           {% endfor %}
+           {% for key in movie_dict['movie'] %}
+          <li class="list-group-item">{{movie_dict['movie'][key]['title']}}</li>  
+       
+           {% endfor %}
+        </ul>
+  
+    </div>
+  </div>
+  
+  {% endif %}
 {% endblock %}

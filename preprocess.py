@@ -114,6 +114,7 @@ def process_dataset2(): # USE THIS ONE JUST FOR API DATA POINTS
         for crew_member in json.loads(crew):
             job = crew_member['job']
             name = crew_member['name'].lower().strip()
+            if name == "" : continue
             if(job == 'Director'):
                 directorstr += name + "|"
                 if name not in directors_resource:
@@ -126,6 +127,7 @@ def process_dataset2(): # USE THIS ONE JUST FOR API DATA POINTS
         # Loop for Genres
         for genre in json.loads(genres):
             name = genre['name'].lower().strip()
+            if name == "" : continue
             if name not in genre_resource:
                 genre_resource.append(name)
             genresstr += name + "|"
@@ -133,6 +135,7 @@ def process_dataset2(): # USE THIS ONE JUST FOR API DATA POINTS
         # Loop for Keywords
         for keyword in json.loads(keywords):
             name = keyword['name'].lower().strip()
+            if name == "" : continue
             if name not in keyword_resource:
                 keyword_resource.append(name)
             keywordstr += name + "|"
@@ -141,6 +144,7 @@ def process_dataset2(): # USE THIS ONE JUST FOR API DATA POINTS
         for actor in json.loads(cast):
             if actor['order'] > 10: continue # only taking the top 10 actors per movie
             name = actor['name'].lower().strip()
+            if name == "" : continue
             if name not in actors_resource:
                 if actor['gender'] == 2:
                     actors_resource[name] = 'M'
@@ -165,6 +169,7 @@ def process_dataset2(): # USE THIS ONE JUST FOR API DATA POINTS
     for i in range(len(df2.index)) :
         name = str(df2['actor_1_name'].iloc[i])
         name = name.lower().strip()
+        if name == "" : continue
         if name not in actor_fb_likes :
             actor_fb_likes[name] = df2['actor_1_facebook_likes'].iloc[i]
         name = str(df2['actor_2_name'].iloc[i])

@@ -28,7 +28,7 @@ user_dict = {}
 app = Flask(__name__)
 
 ADMIN_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9"
-
+token_dict[ADMIN_TOKEN] = True
 api = Api(app, title='COMP9321 Assignment 2 - API Documentation', validate=True)
 dirname = os.path.dirname(__file__)
 analytics_path = os.path.join(dirname, 'analytics.csv')
@@ -456,7 +456,7 @@ imdb_score_parser = reqparse.RequestParser()
 imdb_score_parser.add_argument('director_name', type=str, help="Director Name queried", required=True)
 imdb_score_parser.add_argument('actor_1_name', type=str, help="Actor 1 Name queried", required=True)
 imdb_score_parser.add_argument('actor_2_name', type=str, help="Actor 2 Name queried", required=False)
-imdb_score_parser.add_argument('actor_3_name', type=int, help="Actor 3 Name queried", required=False)
+imdb_score_parser.add_argument('actor_3_name', type=str, help="Actor 3 Name queried", required=False)
 imdb_score_parser.add_argument('budget', type=int, help="Budget Amount", required=True)
 imdb_score_parser.add_argument('token', type=str, help="Token, use your login and login at /login for a token.\nIf you don't have a login, you can register at /register", required=True)
 
@@ -773,16 +773,6 @@ class Screenwriter(Resource):
                        'message': ' Invalid token'
                    }, 401
         writer_record = screenwriterDF
-        if 'name' in args and args['name'] is not None:
-            writer_name = args['name'].lower().strip('\'').strip('\"')
-            writer_record = writer_record[writer_record['writer_name'].str.contains(writer_name) == True]
-
-            # OLD
-            # q = 'writer_name == \'' + writer_name + '\''
-            # writer_record = screenwriterDF.query(q)
-
-        writer_record, response = pagination(request, args, writer_record)
-
 
         args = writer_parser.parse_args()
         writer_record = screenwriterDF
@@ -1068,9 +1058,30 @@ def index():
                                          actors=list(actorDF['actor_name']),
                                          genres=list(genresDF['genres']))
 
-@app.route('/application/imdbscoreprediction_ui', methods=['GET'])
+@app.route('/application/imdbscoreprediction_ui', methods=['GET', 'POST'])
 def imdbscoreprediction_ui():
-
+    form = request.form
+    if request.method == 'POST':
+        url = str(request.url_root) + 'imdb_score_prediction'+'?token='+ADMIN_TOKEN 
+        if 'url' in form and form['url'] is not None:
+            url = form['url']
+        else :
+            for key in form:
+                if key in form.keys():
+                    if len(form.getlist(key)) > 1 :
+                        separator = ','
+                        url += "&" + key + "=" + separator.join(form.getlist(key))
+                    elif form[key] is not None and form[key] != "":
+                        if key == 'budget':
+                            url += "&" + key + "=" + form[key]
+                        else :
+                            url += "&" + key + "=" + str(form[key])
+            print(url)
+        result = req.get(url).json()    
+        print(result)
+        return render_template('imdbscoreprediction.html', directors=list(directorDF['director_name']),
+                                         actors=list(actorDF['actor_name']),
+                                         genres=list(genresDF['genres']), score=result)
     return render_template('imdbscoreprediction.html', directors=list(directorDF['director_name']),
                                          actors=list(actorDF['actor_name']),
                                          genres=list(genresDF['genres']))
@@ -1087,37 +1098,107 @@ def genres_ui():
         result = req.get(url).json()
         return render_template('genres.html', genres_dict=result)
 
-@app.route('/application/directors_ui', methods=['GET'])
+@app.route('/application/directors_ui', methods=['GET', 'POST'])
 def directors_ui():
+    form = request.form
+    # print(form)
+    if request.method == 'POST':
+        if 'name' in form and form['name'] is not None and form['name'] != "":
+            url = str(request.url_root) + 'directors'+'?token='+ADMIN_TOKEN + '&name=' + str(form['name'])
+        elif 'url' in form and form['url'] is not None:
+            url = form['url']
+        else :
+            url = str(request.url_root) + 'directors'+'?token='+ADMIN_TOKEN 
+        result = req.get(url).json()
+        return render_template('directors.html', directors_dict=result)
 
     return render_template('directors.html')
 
-@app.route('/application/actors_ui', methods=['GET'])
+@app.route('/application/actors_ui', methods=['GET', 'POST'])
 def actors_ui():
+    form = request.form
+    print(form)
+    if request.method == 'POST':
+        url = str(request.url_root) + 'actors'+'?token='+ADMIN_TOKEN 
+        if 'url' in form and form['url'] is not None:
+            url = form['url']
+        else :
+            if 'name' in form and form['name'] is not None and form['name'] != "":
+                url += '&name=' + form['name']
+            if 'gender' in form and form['gender'] is not None and form['gender'] != "":
+                url += '&gender=' + form['gender'] 
+        print(url)
+        result = req.get(url).json()
+        return render_template('actors.html', actors_dict=result)
 
     return render_template('actors.html')
 
 @app.route('/application/keywords_ui', methods=['GET','POST'])
 def keywords_ui():
     global ADMIN_TOKEN
-    
+    print("ARRRGS")
+    form = request.form
+
     if request.method == 'GET':
         return render_template('keywords.html')
     elif request.method == 'POST':
         # Get perform API call
-        url = str(request.url_root) + 'keywords'+'?token='+ADMIN_TOKEN
+        if 'url' in form and form['url'] is not None:
+            url = form['url']
+        else :
+            url = str(request.url_root) + 'keywords'+'?token='+ADMIN_TOKEN
         result = req.get(url).json()
         
         return render_template('keywords.html', keywords_dict=result)
     
 
-@app.route('/application/movies_ui', methods=['GET'])
+@app.route('/application/movies_ui', methods=['GET', 'POST'])
 def movies_ui():
+    form = request.form
+    print(form)
+    if request.method == 'POST':
+        url = str(request.url_root) + 'movies'+'?token='+ADMIN_TOKEN 
+        if 'url' in form and form['url'] is not None:
+            url = form['url']
+        else :
+            for key in form:
+                if key in form.keys():
+                    if len(form.getlist(key)) > 1 :
+                        separator = ','
+                        url += "&" + key + "=" + separator.join(form.getlist(key))
+                    elif form[key] is not None and form[key] != "":
+                        url += "&" + key + "=" + form[key]
+            print(url)
+        result = req.get(url).json()    
+        return render_template('movies.html', directors=list(directorDF['director_name']),
+                                         actors=list(actorDF['actor_name']),
+                                         genres=list(genresDF['genres']),
+                                         keywords=list(keywordsDF['keywords']),
+                                         screenwriter=list(screenwriterDF['writer_name']),
+                                         movie_dict=result)
 
-    return render_template('movies.html')
+    return render_template('movies.html', directors=list(directorDF['director_name']),
+                                         actors=list(actorDF['actor_name']),
+                                         genres=list(genresDF['genres']),
+                                         keywords=list(keywordsDF['keywords']),
+                                         screenwriter=list(screenwriterDF['writer_name'])
+                                         
+                                         )
 
-@app.route('/application/screenwriters_ui', methods=['GET'])
+@app.route('/application/screenwriters_ui', methods=['GET', 'POST'])
 def screenwriters_ui():
+    form = request.form
+    # print(form)
+    if request.method == 'POST':
+        if 'name' in form and form['name'] is not None:
+            url = str(request.url_root) + 'screenwriters'+'?token='+ADMIN_TOKEN + '&name=' + form['name']
+            print(url)
+        elif 'url' in form and form['url'] is not None:
+            url = form['url']
+        else :
+            url = str(request.url_root) + 'screenwriters'+'?token='+ADMIN_TOKEN 
+        result = req.get(url).json()
+        return render_template('screenwriters.html', screenwriters_dict=result)
 
     return render_template('screenwriters.html')
 

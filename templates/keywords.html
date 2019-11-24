@@ -38,17 +38,34 @@
     <div class="row">
         <div class="col">
           {% if keywords_dict['prev'] is defined and keywords_dict['next'] is defined %}
+           {%if keywords_dict['prev']['href'] != None%}
+            
+              <span>
+                <form action="/application/keywords_ui" method="post">
+                  <input type='hidden' name='url' value={{keywords_dict['prev']['href']}} >
+                  <button type="submit" class="btn btn-primary">Previous</button>
+                </form>
+              </span>
+              {% endif %}
+
+              {%if keywords_dict['next']['href'] != None%}
             <span>
-                <a class="btn btn-primary" href="{{ prev }}">Previous</a>
-                <a class="btn btn-primary" href="{{ next }}">Next</a>
+                <form action="/application/keywords_ui" method="post">
+                  <input type='hidden' name='url' value={{keywords_dict['next']['href']}} >
+                  <button type="submit" class="btn btn-primary">Next</button>
+                </form>              
             </span>
-          {% endif %}
-          
+            {% endif %}
+
+            {% endif %}
         </div>
       </div>
       <ul class="list-group">
         {% for key in keywords_dict['keywords'] %}
         <li class="list-group-item">{{keywords_dict['keywords'][key]['keywords']}}</li>  
+        {% endfor %}
+        {% for key in keywords_dict['keyword'] %}
+        <li class="list-group-item">{{keywords_dict['keyword'][key]['keywords']}}</li>  
         {% endfor %}
       </ul>
 
@@ -57,6 +74,6 @@
 
 {% endif %}
 
-{{ keywords_dict }}
+<!-- {{ keywords_dict }} -->
 
 {% endblock %}
