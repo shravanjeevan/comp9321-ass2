@@ -38,6 +38,34 @@
   <small id="directorHelp" class="form-text text-muted">Please select the director of your film</small>
   </div>
 
+  <div class="form-group">
+  <label for="Actor1">Actor1</label>
+  <select class="form-control">
+    {% for dir in actors[1:] %}
+     <option>{{dir}}</option>
+    {% endfor %}
+  </select>
+  <small id="actor1Help" class="form-text text-muted">Please select an actor for your film</small>
+  </div>
+  <div class="form-group">
+  <label for="Actor2">Actor2</label>
+  <select class="form-control">
+    {% for dir in actors[1:] %}
+     <option>{{dir}}</option>
+    {% endfor %}
+  </select>
+  <small id="actor1Help" class="form-text text-muted">Please select an actor for your film</small>
+  </div>
+  <div class="form-group">
+  <label for="Actor3">Actor2</label>
+  <select class="form-control">
+    {% for dir in actors[1:] %}
+     <option>{{dir}}</option>
+    {% endfor %}
+  </select>
+  <small id="actor1Help" class="form-text text-muted">Please select an actor for your film</small>
+  </div>
+
  <div class="form-group">
   <label for="budget">Budget</label>
   <input type="number" class="form-control" id="exampleInputEmail1" aria-describedby="budgetHelp">
