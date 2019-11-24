@@ -605,7 +605,7 @@ class IMDBScorePredictor(Resource):
         actor_3_facebook_likes = args['actor_3_facebook_likes']
         # cast_total_facebook_likes = args['cast_total_facebook_likes']
         budget = args['budget']
-        
+
         # movie_facebook_likes = args['movie_facebook_likes']
 
         return {
@@ -622,7 +622,7 @@ class Analytics(Resource):
     @api.response(404, 'Not found. Collection not found.')
     def get(self):
         global analytics_api_call_count
-        # print(json.dumps(analytics)) 
+        # print(json.dumps(analytics))
         response = { "href": "http://127.0.0.1:5000/analytics_api_call_count",
                     "results_shown": len(analytics_api_call_count),
                     "total_results": len(analytics_api_call_count),
@@ -767,39 +767,39 @@ def index():
                                          actors=list(actorDF['actor_name']),
                                          genres=list(genresDF['genres']))
 
-@app.route('/imdbscoreprediction_ui', methods=['GET'])
+@app.route('/application/imdbscoreprediction_ui', methods=['GET'])
 def imdbscoreprediction_ui():
 
     return render_template('imdbscoreprediction.html', directors=list(directorDF['director_name']),
                                          actors=list(actorDF['actor_name']),
                                          genres=list(genresDF['genres']))
 
-@app.route('/genres_ui', methods=['GET'])
+@app.route('/application/genres_ui', methods=['GET'])
 def genres_ui():
 
     return render_template('genres.html', genres=list(genresDF['genres']))
 
-@app.route('/directors_ui', methods=['GET'])
+@app.route('/application/directors_ui', methods=['GET'])
 def directors_ui():
 
     return render_template('directors.html')
 
-@app.route('/actors_ui', methods=['GET'])
+@app.route('/application/actors_ui', methods=['GET'])
 def actors_ui():
 
     return render_template('actors.html')
 
-@app.route('/keywords_ui', methods=['GET'])
+@app.route('/application/keywords_ui', methods=['GET'])
 def keywords_ui():
 
     return render_template('keywords.html')
 
-@app.route('/movies_ui', methods=['GET'])
+@app.route('/application/movies_ui', methods=['GET'])
 def movies_ui():
 
     return render_template('movies.html')
 
-@app.route('/screenwriters_ui', methods=['GET'])
+@app.route('/application/screenwriters_ui', methods=['GET'])
 def screenwriters_ui():
 
     return render_template('screenwriters.html')
