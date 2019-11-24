@@ -4,7 +4,7 @@ from urllib.parse import quote_plus as urlencode
 import json
 from preprocess import process_dataset2
 from machinelearning import predict_score
-
+import requests as req
 # TODO Things that must be done before submission
 # - API:
 #   1. Authentication
@@ -50,6 +50,46 @@ top_screenwriter = dict()
 
 # API ENDPOINT DEFINTIONS
 
+# -- Register --
+# register_parser
+register_parser = reqparse.RequestParser()
+register_parser.add_argument('username', type=str, help="Input your desired username")
+register_parser.add_argument('password', type=str, help="Input your desired password")
+
+@api.route('/register', methods=['GET'])
+class Register(Resource):
+    @api.doc('register_account')
+    @api.expect(register_parser)
+    @api.response(200, 'Success. registered successfully.')
+    @api.response(400, 'Failed, missing args')
+    def get(self):
+        args = writer_parser.parse_args()
+        if "username" not in args or "password" not in args:
+            return {
+                'error': 'missing args',
+                'message': 'Failed, missing args'
+            }, 400
+        return {
+                'message': 'Success. registered successfully.'
+            }, 200
+
+# -- Login --
+# login_parser
+login_parser = reqparse.RequestParser()
+login_parser.add_argument('username', type=str, help="Input your desired username")
+login_parser.add_argument('password', type=str, help="Input your desired password")
+
+@api.route('/login', methods=['GET'])
+class Login(Resource):
+    @api.doc('register_account')
+    @api.expect(register_parser)
+    @api.response(200, 'Success. logged in successfully')
+    def get(self):
+        return {
+                'message': 'Success. logged in successfully',
+                'token' : 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9'
+            }, 200
+
 # -- Actors --
 # actors_parser
 actors_parser = reqparse.RequestParser()
@@ -57,6 +97,7 @@ actors_parser.add_argument('name', type=str, help="Name of the actor queried.")
 actors_parser.add_argument('gender', type=str, choices=('M', 'F', 'O'), help="Actor gender.\nEnsure that there are NO quotation marks around the gender letter (either \' or \" ).")
 actors_parser.add_argument('offset', type=int, help="An integer indicating the distance between the first record and the input offset record.\nDefault value: 0.")
 actors_parser.add_argument('limit', type=int, help="Number of results returned per query.\nDefault value: 20 records.")
+actors_parser.add_argument('token', type=str, help="Token, use your login and login at /login for a token.\nIf you don't have a login, you can register at /register")
 
 @api.route('/actors', doc={
     "description" : "Endpoint which gets all actors and each of their corresponding information, or accepts parameters to refine the list of actors returned."
@@ -66,7 +107,7 @@ class Actors(Resource):
     @api.expect(actors_parser)
     @api.response(200, 'Success. Collection entries retrieved.')
     @api.response(400, 'Bad request. Incorrect syntax.')
-    @api.response(401, 'Unauthorised access to collections.')
+    @api.response(401, 'Unauthorised. Invalid token'.)
     @api.response(403, 'Forbidden access to collections.')
     @api.response(404, 'Not found. Collection not found.')
     @api.response(500, 'Internal Service Error.')
@@ -77,6 +118,12 @@ class Actors(Resource):
         analytics_api_call_count['actors'] += 1
         args = actors_parser.parse_args()
         actor_record = actorDF
+
+        if 'token' not in args or args['token'] != 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9':
+            return {
+                'error': 'Unauthorised',
+                'message': ' Invalid token'
+            }, 401
 
         # If name param is set
         if 'name' in args and args['name'] is not None:
@@ -814,10 +861,16 @@ def imdbscoreprediction_ui():
                                          actors=list(actorDF['actor_name']),
                                          genres=list(genresDF['genres']))
 
-@app.route('/application/genres_ui', methods=['GET'])
+@app.route('/application/genres_ui', methods=['GET', 'POST'])
 def genres_ui():
 
-    return render_template('genres.html', genres=list(genresDF['genres']))
+    if request.method == 'GET':
+        return render_template('genres.html')
+    elif request.method == 'POST':
+        # Get perform API call
+        url = str(request.url_root) + 'genres'
+        result = req.get(url).json()
+        return render_template('genres.html', genres_dict=result)
 
 @app.route('/application/directors_ui', methods=['GET'])
 def directors_ui():
@@ -847,4 +900,6 @@ def screenwriters_ui():
 
 
 if __name__ == '__main__':
-    app.run(debug=True, use_reloader=True)
+
+  
+app.run(debug=True, use_reloader=True, ssl_context='adhoc')
