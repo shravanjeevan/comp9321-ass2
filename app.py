@@ -102,7 +102,7 @@ class Register(Resource):
     @api.response(200, 'Success. registered successfully.')
     @api.response(400, 'Failed, missing args')
     def get(self):
-        args = writer_parser.parse_args()
+        args = register_parser.parse_args()
         if "username" not in args or "password" not in args:
             return {
                 'error': 'missing args',
@@ -120,7 +120,7 @@ login_parser.add_argument('password', type=str, help="Input your desired passwor
 
 @api.route('/login', methods=['GET'])
 class Login(Resource):
-    @api.doc('register_account')
+    @api.doc('login_account')
     @api.expect(register_parser)
     @api.response(200, 'Success. logged in successfully')
     def get(self):
@@ -201,15 +201,26 @@ class Actors(Resource):
 
         return response, 200
 
+specificActors_parser = reqparse.RequestParser()
+specificActors_parser.add_argument('token', type=str, help="token, use your login and login at /login for a token,"
+                                                   "if you don't have a login, you can register at /register ")
 # -- Specific Actor --
 @api.route('/actors/<int:actor_id>')
 class SpecificActor(Resource):
     @api.doc('get_specific_actor')
+    @api.expect(specificActors_parser)
     @api.response(200, 'Success. Collection entries retrieved.')
     # @api.response(400, 'Bad request. Incorrect syntax.')
+    @api.response(401, 'Unauthorised. Invalid token')
     @api.response(404, 'Not found. Collection not found.')
     def get(self, actor_id):
         # print()
+        args = specificActors_parser.parse_args()
+        if 'token' not in args or args['token'] != 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9':
+            return {
+                'error': 'Unauthorised',
+                'message': ' Invalid token'
+            }, 401
         global analytics_api_call_count
         analytics_api_call_count['specific actor'] += 1
         if not actorDF.index.isin([actor_id]).any():
@@ -231,6 +242,8 @@ director_parser = reqparse.RequestParser()
 director_parser.add_argument('name', type=str, help="Name of the director queried")
 director_parser.add_argument('offset', type=int, help="offset given")
 director_parser.add_argument('limit', type=int, help="number of results to return")
+director_parser.add_argument('token', type=str, help="token, use your login and login at /login for a token,"
+                                                   "if you don't have a login, you can register at /register ")
 
 @api.route('/directors')
 class Director(Resource):
@@ -246,6 +259,13 @@ class Director(Resource):
         analytics_api_call_count['directors'] += 1
 
         args = director_parser.parse_args()
+
+        if 'token' not in args or args['token'] != 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9':
+            return {
+                'error': 'Unauthorised',
+                'message': ' Invalid token'
+            }, 401
+
         director_record = directorDF
         if 'name' in args and args['name'] is not None:
             director_name = args['name'].lower().strip('\'').strip('\"')
@@ -308,6 +328,8 @@ writer_parser = reqparse.RequestParser()
 writer_parser.add_argument('name', type=str, help="Name of the screenwriter queried")
 writer_parser.add_argument('offset', type=int, help="offset given")
 writer_parser.add_argument('limit', type=int, help="number of results to return")
+writer_parser.add_argument('token', type=str, help="token, use your login and login at /login for a token,"
+                                                   "if you don't have a login, you can register at /register ")
 
 @api.route('/screenwriters')
 class Screenwriter(Resource):
@@ -322,6 +344,11 @@ class Screenwriter(Resource):
         analytics_api_call_count['screenwriters'] += 1
 
         args = writer_parser.parse_args()
+        if 'token' not in args or args['token'] != 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9':
+            return {
+                'error': 'Unauthorised',
+                'message': ' Invalid token'
+            }, 401
         writer_record = screenwriterDF
         if 'name' in args and args['name'] is not None:
             writer_name = args['name'].lower().strip('\'').strip('\"')
@@ -390,6 +417,8 @@ movie_parser.add_argument('budget', type=int)
 movie_parser.add_argument('revenue', type=int)
 movie_parser.add_argument('offset', type=int, help="offset given")
 movie_parser.add_argument('limit', type=int, help="number of results to return")
+movie_parser.add_argument('token', type=str, help="token, use your login and login at /login for a token,"
+                                                   "if you don't have a login, you can register at /register ")
 
 @api.route('/movies')
 class Movies(Resource):
@@ -491,6 +520,8 @@ class SpecificMovie(Resource):
 keyword_parser = reqparse.RequestParser()
 keyword_parser.add_argument('offset', type=int, help="offset given")
 keyword_parser.add_argument('limit', type=int, help="number of results to return")
+keyword_parser.add_argument('token', type=str, help="token, use your login and login at /login for a token,"
+                                                   "if you don't have a login, you can register at /register ")
 
 @api.route('/keywords')
 class Keywords(Resource):
@@ -524,6 +555,8 @@ class Keywords(Resource):
 genre_parser = reqparse.RequestParser()
 genre_parser.add_argument('offset', type=int, help="offset given")
 genre_parser.add_argument('limit', type=int, help="number of results to return")
+genre_parser.add_argument('token', type=str, help="token, use your login and login at /login for a token,"
+                                                   "if you don't have a login, you can register at /register ")
 
 @api.route('/genres')
 class Genres(Resource):
@@ -630,6 +663,8 @@ imdb_score_parser.add_argument('actor_1_name', type=str, help="Name of Actor (re
 imdb_score_parser.add_argument('actor_2_name', type=str, help="Name of Actor (optional)", required=False)
 imdb_score_parser.add_argument('actor_3_name', type=str, help="Name of Actor (optional)", required=False)
 imdb_score_parser.add_argument('budget', type=int, help="Budget", required=True)
+imdb_score_parser.add_argument('token', type=str, help="token, use your login and login at /login for a token,"
+                                                   "if you don't have a login, you can register at /register ")
 
 @api.route('/imdb_score_prediction')
 class IMDBScorePredictor(Resource):
@@ -903,6 +938,4 @@ def screenwriters_ui():
 
 
 if __name__ == '__main__':
-
-  
-app.run(debug=True, use_reloader=True, ssl_context='adhoc')
+    app.run(debug=True, use_reloader=True)
