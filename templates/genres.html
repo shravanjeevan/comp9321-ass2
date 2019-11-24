@@ -20,8 +20,19 @@
   </div>
 </nav>
 <br> </br>
+
 <center>
   <h1> Genres </h1>
 
+  <pr> Press button below to get the list of genres.
+  <br> </br>
+  <form action="/application/genres_ui" method="post">
+  <button type="submit" class="btn btn-primary">Get Genres</button>
+  </form>
 </center>
+
+<br></br>
+
+{{genres}}
+
 {% endblock %}

@@ -4,7 +4,7 @@ from urllib.parse import quote_plus as urlencode
 import json
 from preprocess import process_dataset2
 from machinelearning import predict_score
-
+import requests as req
 # TODO Things that must be done before submission
 # - API:
 #   1. Authentication
@@ -774,10 +774,16 @@ def imdbscoreprediction_ui():
                                          actors=list(actorDF['actor_name']),
                                          genres=list(genresDF['genres']))
 
-@app.route('/application/genres_ui', methods=['GET'])
+@app.route('/application/genres_ui', methods=['GET', 'POST'])
 def genres_ui():
 
-    return render_template('genres.html', genres=list(genresDF['genres']))
+    if request.method == 'GET':
+        return render_template('genres.html')
+    elif request.method == 'POST':
+        # Get perform API call
+        url = str(request.url_root) + 'genres'
+        result = req.get(url).json()
+        return render_template('genres.html', genres_dict=result)
 
 @app.route('/application/directors_ui', methods=['GET'])
 def directors_ui():
