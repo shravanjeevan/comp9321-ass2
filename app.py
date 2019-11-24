@@ -4,6 +4,9 @@ from urllib.parse import quote_plus as urlencode
 import json
 from preprocess import process_dataset2
 from machinelearning import predict_score
+import pandas as pd
+import numpy as np
+import os
 import requests as req
 # TODO Things that must be done before submission
 # - API:
@@ -18,7 +21,17 @@ import requests as req
 
 app = Flask(__name__)
 
-api = Api(app, title='COMP9321 Assignment 2 - API Documentation')
+api = Api(app, title='COMP9321 Assignment 2 - API Documentation', validate=True)
+dirname = os.path.dirname(__file__)
+analytics_path = os.path.join(dirname, 'analytics.csv')
+
+def updateCSV(apiUsage): 
+    df = pd.DataFrame.from_dict(apiUsage, orient='columns')
+    df.to_csv(analytics_path, index=False)
+    
+def loadCSV():
+    analytics_api_call_count = pd.read_csv(analytics_path)
+    return  analytics_api_call_count.to_dict()
 
 
 #verify token
@@ -30,19 +43,25 @@ def valid_token(token):
 
 # GLOBAL VARIABLES
 actor_average, directorDF, screenwriterDF, actorDF, keywordsDF, genresDF, movieDF = process_dataset2()
-analytics_api_call_count = {
-    'actors': 0,
-    'specific actor': 0,
-    'directors': 0,
-    'specific director': 0,
-    'screenwriters': 0,
-    'specific screenwriter': 0,
-    'movies': 0,
-    'specific movie': 0,
-    'keywords': 0,
-    'genres': 0,
-    'score predictor': 0
-}
+analytics_api_call_count = loadCSV()
+   
+# {
+#     'actors': 0,
+#     'specific actor': 0,
+#     'directors': 0,
+#     'specific director': 0,
+#     'screenwriters': 0,
+#     'specific screenwriter': 0,
+#     'movies': 0,
+#     'specific movie': 0,
+#     'keywords': 0,
+#     'genres': 0,
+#     'score predictor': 0
+# }
+
+
+
+
 
 top_actor = dict()
 top_movie = dict()
@@ -123,7 +142,8 @@ class Actors(Resource):
         global actorDF
         global analytics_api_call_count
         global top_actor
-        analytics_api_call_count['actors'] += 1
+        analytics_api_call_count['actors'][0]+= 1
+        updateCSV(analytics_api_call_count)
         args = actors_parser.parse_args()
         actor_record = actorDF
 
@@ -197,7 +217,9 @@ class SpecificActor(Resource):
                        'message': ' Invalid token'
                    }, 401
         global analytics_api_call_count
-        analytics_api_call_count['specific actor'] += 1
+        analytics_api_call_count['specific actor'][0]+= 1
+        updateCSV(analytics_api_call_count)
+
         if not actorDF.index.isin([actor_id]).any():
             return {
                 'error': 'Not Found',
@@ -228,7 +250,7 @@ class Analytics(Resource):
     @api.response(500, 'Internal Service Error.')
     def get(self):
         global analytics_api_call_count
-        # print(json.dumps(analytics)) 
+        # print(json.dumps(analytics))
         response = { "href": request.base_url,
                     "results_shown": len(analytics_api_call_count),
                     "total_results": len(analytics_api_call_count),
@@ -261,7 +283,8 @@ class Director(Resource):
         global directorDF
         global analytics_api_call_count
         global top_director
-        analytics_api_call_count['directors'] += 1
+        analytics_api_call_count['directors'][0] += 1
+        updateCSV(analytics_api_call_count)
 
         args = director_parser.parse_args()
         if 'token' not in args or not valid_token(args["token"]):
@@ -319,7 +342,9 @@ class SpecificDirector(Resource):
                        'message': ' Invalid token'
                    }, 401
         global analytics_api_call_count
-        analytics_api_call_count['specific director'] += 1
+        analytics_api_call_count['specific director'][0] += 1
+        updateCSV(analytics_api_call_count)
+
         if not directorDF.index.isin([director_id]).any():
             return {
                 'error': 'Not Found',
@@ -354,7 +379,9 @@ class Genres(Resource):
     def get(self):
         global genresDF
         global analytics_api_call_count
-        analytics_api_call_count['genres'] += 1
+        analytics_api_call_count['genres'][0] += 1
+        updateCSV(analytics_api_call_count)
+
         genres_record = genresDF
         args = genre_parser.parse_args()
         if 'token' not in args or not valid_token(args["token"]):
@@ -409,7 +436,9 @@ class IMDBScorePredictor(Resource):
 
         director_record = directorDF
         actor_record    = actorDF
-        analytics_api_call_count['score predictor'] += 1
+        analytics_api_call_count['score predictor'][0]+= 1
+        updateCSV(analytics_api_call_count)
+
         args = imdb_score_parser.parse_args()
         if 'token' not in args or not valid_token(args["token"]):
             return {
@@ -420,18 +449,18 @@ class IMDBScorePredictor(Resource):
         # budget
         budget = args['budget']
 
-        # DIRECTOR 
+        # DIRECTOR
         director = args['director_name'].lower().strip('\'').strip('\"')
         q = 'director_name == \'' + director + '\''
         director = director_record.query(q)
-        
+
         if director_record.empty:
             return {
                 'error': 'Not Found',
                 'message': 'Director Not Found'
             }, 404
         director_likes = director['facebook_likes'].iloc[0]
-        
+
         # ACTOR 1
         actor1 = args['actor_1_name'].lower().strip('\'').strip('\"')
         q = 'actor_name == \'' + actor1 + '\''
@@ -441,7 +470,7 @@ class IMDBScorePredictor(Resource):
                 'error': 'Not Found',
                 'message': 'Actor 1 Not Found'
             }, 404
-        actor1_likes = actor1['facebook_likes'].iloc[0]        
+        actor1_likes = actor1['facebook_likes'].iloc[0]
 
         # ACTOR 2
         if 'actor_2_name' in args and args['actor_2_name'] is not None:
@@ -498,7 +527,9 @@ class Keywords(Resource):
     def get(self):
         global keywordsDF
         global analytics_api_call_count
-        analytics_api_call_count['keywords'] += 1
+        analytics_api_call_count['keywords'][0]+= 1
+        updateCSV(analytics_api_call_count)
+
         keywords_record = keywordsDF
         args = keyword_parser.parse_args()
         if 'token' not in args or not valid_token(args["token"]):
@@ -555,7 +586,9 @@ class Movies(Resource):
         global movieDF
         global analytics_api_call_count
         global top_movie
-        analytics_api_call_count['movies'] += 1
+        analytics_api_call_count['movies'][0]+= 1
+        updateCSV(analytics_api_call_count)
+
         movie_record = movieDF
         expr = '(?=.*{})'
         args = movie_parser.parse_args()
@@ -645,7 +678,9 @@ class SpecificMovie(Resource):
                        'message': ' Invalid token'
                    }, 401
         global analytics_api_call_count
-        analytics_api_call_count['specific movie'] += 1
+        analytics_api_call_count['specific movie'][0]+= 1
+        updateCSV(analytics_api_call_count)
+
         if not movieDF.index.isin([movie_id]).any():
             return {
                 'error': 'Not Found',
@@ -684,7 +719,8 @@ class Screenwriter(Resource):
     def get(self):
         global screenwriterDF
         global analytics_api_call_count
-        analytics_api_call_count['screenwriters'] += 1
+        analytics_api_call_count['screenwriters'][0]+= 1
+        updateCSV(analytics_api_call_count)
 
         args = writer_parser.parse_args()
         if 'token' not in args or not valid_token(args["token"]):
@@ -702,7 +738,7 @@ class Screenwriter(Resource):
             # writer_record = screenwriterDF.query(q)
 
         writer_record, response = pagination(request, args, writer_record)
-        
+
 
         args = writer_parser.parse_args()
         writer_record = screenwriterDF
@@ -763,9 +799,11 @@ class SpecificScreenwriter(Resource):
                    }, 401
         global analytics_api_call_count
         global top_screenwriter
-        analytics_api_call_count['specific screenwriter'] += 1
+        analytics_api_call_count['specific screenwriter'][0]+= 1
+        updateCSV(analytics_api_call_count)
+
         if not screenwriterDF.index.isin([screenwriter_id]).any():
-        
+
             return {
                 'error': 'Not Found',
                 'message': 'Collection was not found'
@@ -1024,7 +1062,6 @@ def movies_ui():
 def screenwriters_ui():
 
     return render_template('screenwriters.html')
-
 
 
 if __name__ == '__main__':
