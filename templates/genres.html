@@ -33,6 +33,11 @@
 
 <br></br>
 
-{{genres}}
+{% for gen in genres_dict %}
+  {{gen}}
+
+{% endfor %}
+
+{{genres_dict}}
 
 {% endblock %}
