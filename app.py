@@ -107,7 +107,7 @@ class Actors(Resource):
     @api.expect(actors_parser)
     @api.response(200, 'Success. Collection entries retrieved.')
     @api.response(400, 'Bad request. Incorrect syntax.')
-    @api.response(401, 'Unauthorised. Invalid token'.)
+    @api.response(401, 'Unauthorised. Invalid token.')
     @api.response(403, 'Forbidden access to collections.')
     @api.response(404, 'Not found. Collection not found.')
     @api.response(500, 'Internal Service Error.')
