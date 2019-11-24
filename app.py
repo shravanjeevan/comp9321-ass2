@@ -21,6 +21,8 @@ import requests as req
 
 app = Flask(__name__)
 
+ADMIN_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9"
+
 api = Api(app, title='COMP9321 Assignment 2 - API Documentation', validate=True)
 dirname = os.path.dirname(__file__)
 analytics_path = os.path.join(dirname, 'analytics.csv')
@@ -1030,12 +1032,13 @@ def imdbscoreprediction_ui():
 
 @app.route('/application/genres_ui', methods=['GET', 'POST'])
 def genres_ui():
+    global ADMIN_TOKEN
 
     if request.method == 'GET':
         return render_template('genres.html')
     elif request.method == 'POST':
         # Get perform API call
-        url = str(request.url_root) + 'genres'
+        url = str(request.url_root) + 'genres'+'?token='+ADMIN_TOKEN
         result = req.get(url).json()
         return render_template('genres.html', genres_dict=result)
 
@@ -1049,10 +1052,19 @@ def actors_ui():
 
     return render_template('actors.html')
 
-@app.route('/application/keywords_ui', methods=['GET'])
+@app.route('/application/keywords_ui', methods=['GET','POST'])
 def keywords_ui():
-
-    return render_template('keywords.html')
+    global ADMIN_TOKEN
+    
+    if request.method == 'GET':
+        return render_template('keywords.html')
+    elif request.method == 'POST':
+        # Get perform API call
+        url = str(request.url_root) + 'keywords'+'?token='+ADMIN_TOKEN
+        result = req.get(url).json()
+        
+        return render_template('keywords.html', keywords_dict=result)
+    
 
 @app.route('/application/movies_ui', methods=['GET'])
 def movies_ui():

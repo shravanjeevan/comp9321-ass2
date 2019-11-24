@@ -23,5 +23,40 @@
 <center>
   <h1> Keywords </h1>
 
+  <pr> Press button below to get the list of keywords.
+  <br> </br>
+  <form action="/application/keywords_ui" method="post">
+  <button type="submit" class="btn btn-primary">Get Keywords</button>
+  </form>
 </center>
+
+<br/>
+{% if keywords_dict is defined %}
+<div class="row justify-content-center">
+  <div class="col-4 text-center">
+    <p><b>Total Number of Keywords: </b>{{keywords_dict['total_results']}}</p>
+    <div class="row">
+        <div class="col">
+          {% if keywords_dict['prev'] is defined and keywords_dict['next'] is defined %}
+            <span>
+                <a class="btn btn-primary" href="{{ prev }}">Previous</a>
+                <a class="btn btn-primary" href="{{ next }}">Next</a>
+            </span>
+          {% endif %}
+          
+        </div>
+      </div>
+      <ul class="list-group">
+        {% for key in keywords_dict['keywords'] %}
+        <li class="list-group-item">{{keywords_dict['keywords'][key]['keywords']}}</li>  
+        {% endfor %}
+      </ul>
+
+  </div>
+</div>
+
+{% endif %}
+
+{{ keywords_dict }}
+
 {% endblock %}
