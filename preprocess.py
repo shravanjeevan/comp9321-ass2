@@ -63,7 +63,10 @@ def process_dataset2(): # USE THIS ONE JUST FOR API DATA POINTS
     result  = pd.concat([df, df1], axis=1, join='inner')
 
     df2_columns = ['director_name', 'director_facebook_likes', 'actor_1_name', 'actor_1_facebook_likes', 'actor_2_name', 'actor_2_facebook_likes', 'actor_3_name', 'actor_3_facebook_likes']
-    
+    df2 = df2[df2_columns]
+    df2 = df2.replace(0,float("NaN"))
+    df2 = df2.dropna(axis=0, how='any')
+
     result_columns          = ['title', 'cast', 'crew', 'genres', 'keywords', 'budget', 'revenue', 'popularity', 'vote_average']
     result                  = result[result_columns]
 
@@ -203,8 +206,7 @@ def process_dataset2(): # USE THIS ONE JUST FOR API DATA POINTS
     genredf = genredf.drop(['index'], axis=1)
 
     directordf = pd.DataFrame(directors_resource, columns=['director_name'])
-    directordf = directordf.set_index('director_name')
-    directorlikesdf = pd.Series(actor_fb_likes, name='facebook_likes')
+    directorlikesdf = pd.Series(director_fb_likes, name='facebook_likes')
     directorlikesdf = directorlikesdf.to_frame()
     directorlikesdf.index.name = 'director_name'
     directorlikesdf = directorlikesdf.reset_index()
@@ -213,6 +215,7 @@ def process_dataset2(): # USE THIS ONE JUST FOR API DATA POINTS
     directordf = directordf.sort_values(by=["director_name"])
     directordf = directordf.reset_index()
     directordf = directordf.drop(['index'], axis=1)
+
     screenwriterdf = pd.DataFrame(writers_resource, columns=['writer_name'])
     screenwriterdf = screenwriterdf.drop_duplicates()
     screenwriterdf = screenwriterdf.sort_values(by=["writer_name"])
@@ -255,4 +258,4 @@ if __name__ == '__main__':
     # print("===================== FIRST 3 RESULTS ===================")
     # print(result.head(3).to_string())
     # print(moviesbykeywords)
-    print(process_dataset_forML(pd.read_csv("datasets/movie_metadata.csv")).columns)
+    # print(process_dataset_forML(pd.read_csv("datasets/movie_metadata.csv")).columns)

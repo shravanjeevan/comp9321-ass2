@@ -469,7 +469,6 @@ class Genres(Resource):
         return response, 200
 
 
-
 def pagination(request, args, record):
 
         offset = 0
@@ -518,7 +517,6 @@ def pagination(request, args, record):
         if prevURL  is not None : prevURL = prevURL[:-1]
         if nextURL  is not None : nextURL = nextURL[:-1]
 
-
         return record, {
             'href'  : request.url,
             'offset': offset,
@@ -542,15 +540,11 @@ def pagination(request, args, record):
 # -- Movie --
 # movie_parser
 imdb_score_parser = reqparse.RequestParser()
-# imdb_score_parser.add_argument('num_critic_for_reviews', type=int, help="Number of Critic Reviews")
-imdb_score_parser.add_argument('director_facebook_likes', type=int, help="Number of Facebook Likes for Director", required=True)
-imdb_score_parser.add_argument('actor_1_facebook_likes', type=int, help="Number of Facebook likes for Actor 1", required=True)
-imdb_score_parser.add_argument('actor_2_facebook_likes', type=int, help="Number of Facebook likes for Actor 2", required=True)
-# imdb_score_parser.add_argument('num_voted_users', type=int, help="Number of votes by users")
-imdb_score_parser.add_argument('actor_3_facebook_likes', type=int, help="Number of Facebook likes for Actor 3", required=True)
-# imdb_score_parser.add_argument('num_user_for_reviews', type=int, , help="")
+imdb_score_parser.add_argument('director_name', type=str, help="Director Name", required=True)
+imdb_score_parser.add_argument('actor_1_name', type=str, help="Name of Actor (required)", required=True)
+imdb_score_parser.add_argument('actor_2_name', type=str, help="Name of Actor (optional)", required=False)
+imdb_score_parser.add_argument('actor_3_name', type=str, help="Name of Actor (optional)", required=False)
 imdb_score_parser.add_argument('budget', type=int, help="Budget", required=True)
-# imdb_score_parser.add_argument('movie_facebook_likes', type=int, help="Number of Facebook likes on the movie", required=True)
 
 @api.route('/imdb_score_prediction')
 class IMDBScorePredictor(Resource):
@@ -561,19 +555,71 @@ class IMDBScorePredictor(Resource):
     @api.response(404, 'Not found. Collection not found.')
     def get(self):
         global analytics
+        global directorDF
+        global actorDF
+
+        director_record = directorDF
+        actor_record = actorDF
+
         analytics['score predictor'] += 1
         args = imdb_score_parser.parse_args()
-        director_facebook_likes = args['director_facebook_likes']
-        actor_1_facebook_likes = args['actor_1_facebook_likes']
-        actor_2_facebook_likes = args['actor_2_facebook_likes']
-        actor_3_facebook_likes = args['actor_3_facebook_likes']
-        # cast_total_facebook_likes = args['cast_total_facebook_likes']
-        budget = args['budget']
         
-        # movie_facebook_likes = args['movie_facebook_likes']
+        # budget
+        budget = args['budget']
+
+        # DIRECTOR 
+        director = args['director_name'].lower().strip('\'').strip('\"')
+        q = 'director_name == \'' + director + '\''
+        director = director_record.query(q)
+        
+        if director_record.empty:
+            return {
+                'error': 'Not Found',
+                'message': 'Director Not Found'
+            }, 404
+        director_likes = director['facebook_likes'].iloc[0]
+        
+        # ACTOR 1
+        actor1 = args['actor_1_name'].lower().strip('\'').strip('\"')
+        q = 'actor_name == \'' + actor1 + '\''
+        actor1 = actor_record.query(q)
+        if actor1.empty:
+            return {
+                'error': 'Not Found',
+                'message': 'Actor 1 Not Found'
+            }, 404
+        actor1_likes = actor1['facebook_likes'].iloc[0]        
+
+        # ACTOR 2
+        if 'actor_2_name' in args and args['actor_2_name'] is not None:
+            actor2 = args['actor_2_name'].lower().strip('\'').strip('\"')
+            q = 'actor_name == \'' + actor2 + '\''
+            actor2 = actor_record.query(q)
+            if actor2.empty:
+                return {
+                    'error': 'Not Found',
+                    'message': 'Actor 2 Not Found'
+                }, 404
+            actor2_likes = actor2['facebook_likes'].iloc[0]
+        else :
+            actor2_likes = 1000
+
+        # ACTOR 3
+        if 'actor_3_name' in args and args['actor_3_name'] is not None:
+            actor3 = args['actor_3_name'].lower().strip('\'').strip('\"')
+            q = 'actor_name == \'' + actor3 + '\''
+            actor3 = actor_record.query(q)
+            if actor3.empty:
+                return {
+                    'error': 'Not Found',
+                    'message': 'Actor 3 Not Found'
+                }, 404
+            actor3_likes = actor3['facebook_likes'].iloc[0]
+        else :
+            actor3_likes = 1000
 
         return {
-            'movie_prediction_score': predict_score(director_facebook_likes,actor_1_facebook_likes,actor_2_facebook_likes,actor_3_facebook_likes,budget)
+            'movie_prediction_score': predict_score(director_likes,actor1_likes,actor2_likes,actor3_likes,budget)[1:-1]
         }, 200
 
 
