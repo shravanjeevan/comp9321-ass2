@@ -59,10 +59,6 @@ analytics_api_call_count = loadCSV()
 #     'score predictor': 0
 # }
 
-
-
-
-
 top_actor = dict()
 top_movie = dict()
 top_director = dict()
@@ -410,10 +406,10 @@ class Genres(Resource):
 # -- IMDB Score Prediction --
 # imdb_score_parser
 imdb_score_parser = reqparse.RequestParser()
-imdb_score_parser.add_argument('director_facebook_likes', type=int, help="Number of Facebook Likes for Director", required=True)
-imdb_score_parser.add_argument('actor_1_facebook_likes', type=int, help="Number of Facebook likes for Actor 1", required=True)
-imdb_score_parser.add_argument('actor_2_facebook_likes', type=int, help="Number of Facebook likes for Actor 2", required=False)
-imdb_score_parser.add_argument('actor_3_facebook_likes', type=int, help="Number of Facebook likes for Actor 3", required=False)
+imdb_score_parser.add_argument('director_name', type=str, help="Director Name queried", required=True)
+imdb_score_parser.add_argument('actor_1_name', type=str, help="Actor 1 Name queried", required=True)
+imdb_score_parser.add_argument('actor_2_name', type=str, help="Actor 2 Name queried", required=False)
+imdb_score_parser.add_argument('actor_3_name', type=int, help="Actor 3 Name queried", required=False)
 imdb_score_parser.add_argument('budget', type=int, help="Budget Amount", required=True)
 imdb_score_parser.add_argument('token', type=str, help="Token, use your login and login at /login for a token.\nIf you don't have a login, you can register at /register", required=True)
 
