@@ -20,6 +20,14 @@ app = Flask(__name__)
 
 api = Api(app, title='COMP9321 Assignment 2 - API Documentation')
 
+
+#verify token
+def valid_token(token):
+    if token == 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9':
+        return True
+    else:
+        return False
+
 # GLOBAL VARIABLES
 actor_average, directorDF, screenwriterDF, actorDF, keywordsDF, genresDF, movieDF = process_dataset2()
 analytics_api_call_count = {
@@ -81,7 +89,7 @@ login_parser.add_argument('password', type=str, help="Input your desired passwor
 
 @api.route('/login', methods=['GET'])
 class Login(Resource):
-    @api.doc('register_account')
+    @api.doc('login_account')
     @api.expect(register_parser)
     @api.response(200, 'Success. logged in successfully')
     def get(self):
@@ -97,7 +105,7 @@ actors_parser.add_argument('name', type=str, help="Name of the actor queried.")
 actors_parser.add_argument('gender', type=str, choices=('M', 'F', 'O'), help="Actor gender.\nEnsure that there are NO quotation marks around the gender letter (either \' or \" ).")
 actors_parser.add_argument('offset', type=int, help="An integer indicating the distance between the first record and the input offset record.\nDefault value: 0.")
 actors_parser.add_argument('limit', type=int, help="Number of results returned per query.\nDefault value: 20 records.")
-actors_parser.add_argument('token', type=str, help="Token, use your login and login at /login for a token.\nIf you don't have a login, you can register at /register")
+actors_parser.add_argument('token', type=str, help="Token, use your login and login at /login for a token.\nIf you don't have a login, you can register at /register", required=True)
 
 @api.route('/actors', doc={
     "description" : "Endpoint which gets all actors and each of their corresponding information, or accepts parameters to refine the list of actors returned."
@@ -119,11 +127,11 @@ class Actors(Resource):
         args = actors_parser.parse_args()
         actor_record = actorDF
 
-        if 'token' not in args or args['token'] != 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9':
+        if 'token' not in args or not valid_token(args["token"]):
             return {
-                'error': 'Unauthorised',
-                'message': ' Invalid token'
-            }, 401
+                       'error': 'Unauthorised',
+                       'message': ' Invalid token'
+                   }, 401
 
         # If name param is set
         if 'name' in args and args['name'] is not None:
@@ -167,11 +175,14 @@ class Actors(Resource):
         return response_message, 200
 
 # -- Specific Actor --
+spec_actor_parser = reqparse.RequestParser()
+spec_actor_parser.add_argument('token', type=str, help="Token, use your login and login at /login for a token.\nIf you don't have a login, you can register at /register", required=True)
 @api.route('/actors/<int:actor_id>', doc={
     "description" : "Endpoint which gets a specific actor and their corresponding information based on a unique id number."
 })
 class SpecificActor(Resource):
     @api.doc('get_specific_actor')
+    @api.expect(spec_actor_parser)
     @api.response(200, 'Success. Collection entry retrieved.')
     @api.response(400, 'Bad request. Incorrect syntax.')
     @api.response(401, 'Unauthorised access to collection.')
@@ -179,6 +190,12 @@ class SpecificActor(Resource):
     @api.response(404, 'Not found. Collection not found.')
     @api.response(500, 'Internal Service Error.')
     def get(self, actor_id):
+        args = spec_actor_parser.parse_args()
+        if 'token' not in args or not valid_token(args["token"]):
+            return {
+                       'error': 'Unauthorised',
+                       'message': ' Invalid token'
+                   }, 401
         global analytics_api_call_count
         analytics_api_call_count['specific actor'] += 1
         if not actorDF.index.isin([actor_id]).any():
@@ -194,11 +211,15 @@ class SpecificActor(Resource):
         }, 200
 
 # -- Analytics --
+analytics_api_call_count_parser = reqparse.RequestParser()
+analytics_api_call_count_parser.add_argument('token', type=str, help="Token, use your login and login at /login for a token.\nIf you don't have a login, you can register at /register", required=True)
+
 @api.route('/analytics_api_call_count', doc={
     "description": "Endpoint which returns API usage metrics, such as number of times an endpoint has been called."
 })
 class Analytics(Resource):
     @api.doc('get_analytics')
+    @api.expect(analytics_api_call_count_parser)
     @api.response(200, 'Success. Collection retrieved.')
     @api.response(400, 'Bad request. Incorrect syntax.')
     @api.response(401, 'Unauthorised access to collection.')
@@ -222,6 +243,7 @@ director_parser = reqparse.RequestParser()
 director_parser.add_argument('name', type=str, help="Name of the director queried.")
 director_parser.add_argument('offset', type=int, help="An integer indicating the distance between the first record and the input offset record.\nDefault value: 0.")
 director_parser.add_argument('limit', type=int, help="Number of results returned per query.\nDefault value: 20 records.")
+director_parser.add_argument('token', type=str, help="Token, use your login and login at /login for a token.\nIf you don't have a login, you can register at /register", required=True)
 
 @api.route('/directors', doc={
     "description" : "Endpoint which gets all directors and each of their corresponding information, or accepts parameters to refine the list of directors returned."
@@ -242,6 +264,11 @@ class Director(Resource):
         analytics_api_call_count['directors'] += 1
 
         args = director_parser.parse_args()
+        if 'token' not in args or not valid_token(args["token"]):
+            return {
+                       'error': 'Unauthorised',
+                       'message': ' Invalid token'
+                   }, 401
         director_record = directorDF
         if 'name' in args and args['name'] is not None:
             director_name = args['name'].lower().strip('\'').strip('\"')
@@ -272,15 +299,25 @@ class Director(Resource):
 
 
 # -- Specific Director --
+spec_dir_parser = reqparse.RequestParser()
+spec_dir_parser.add_argument('token', type=str, help="Token, use your login and login at /login for a token.\nIf you don't have a login, you can register at /register", required=True)
+
 @api.route('/directors/<int:director_id>', doc={
     "description": "Endpoint which gets a specific director and their corresponding information based on a unique id number."
 })
 class SpecificDirector(Resource):
     @api.doc('get_specific_director')
+    @api.expect(spec_dir_parser)
     @api.response(200, 'Success. Collection entries retrieved.')
     @api.response(400, 'Bad request. Incorrect syntax.')
     @api.response(404, 'Not found. Collection not found.')
     def get(self, director_id):
+        args = spec_dir_parser.parse_args()
+        if 'token' not in args or not valid_token(args["token"]):
+            return {
+                       'error': 'Unauthorised',
+                       'message': ' Invalid token'
+                   }, 401
         global analytics_api_call_count
         analytics_api_call_count['specific director'] += 1
         if not directorDF.index.isin([director_id]).any():
@@ -300,6 +337,7 @@ class SpecificDirector(Resource):
 genre_parser = reqparse.RequestParser()
 genre_parser.add_argument('offset', type=int, help="An integer indicating the distance between the first record and the input offset record.\nDefault value: 0.")
 genre_parser.add_argument('limit', type=int, help="Number of results returned per query.\nDefault value: 20 records.")
+genre_parser.add_argument('token', type=str, help="Token, use your login and login at /login for a token.\nIf you don't have a login, you can register at /register", required=True)
 
 @api.route('/genres', doc={
     "description": "Endpoint which retrieves all movie genres."
@@ -319,6 +357,11 @@ class Genres(Resource):
         analytics_api_call_count['genres'] += 1
         genres_record = genresDF
         args = genre_parser.parse_args()
+        if 'token' not in args or not valid_token(args["token"]):
+            return {
+                       'error': 'Unauthorised',
+                       'message': ' Invalid token'
+                   }, 401
         genres_record, response_message, response_code = pagination(request, args, genres_record)
 
         if genres_record.empty:
@@ -344,6 +387,8 @@ imdb_score_parser.add_argument('actor_1_facebook_likes', type=int, help="Number 
 imdb_score_parser.add_argument('actor_2_facebook_likes', type=int, help="Number of Facebook likes for Actor 2", required=False)
 imdb_score_parser.add_argument('actor_3_facebook_likes', type=int, help="Number of Facebook likes for Actor 3", required=False)
 imdb_score_parser.add_argument('budget', type=int, help="Budget Amount", required=True)
+imdb_score_parser.add_argument('token', type=str, help="Token, use your login and login at /login for a token.\nIf you don't have a login, you can register at /register", required=True)
+
 
 @api.route('/imdb_score_prediction', doc={
     "description": "Endpoint which returns an IMDB score prediction for a given director name, at least one actor name and a given movie budget amount."
@@ -366,6 +411,11 @@ class IMDBScorePredictor(Resource):
         actor_record    = actorDF
         analytics_api_call_count['score predictor'] += 1
         args = imdb_score_parser.parse_args()
+        if 'token' not in args or not valid_token(args["token"]):
+            return {
+                       'error': 'Unauthorised',
+                       'message': ' Invalid token'
+                   }, 401
 
         # budget
         budget = args['budget']
@@ -430,6 +480,8 @@ class IMDBScorePredictor(Resource):
 keyword_parser = reqparse.RequestParser()
 keyword_parser.add_argument('offset', type=int, help="An integer indicating the distance between the first record and the input offset record.\nDefault value: 0.")
 keyword_parser.add_argument('limit', type=int, help="Number of results returned per query.\nDefault value: 20 records.")
+keyword_parser.add_argument('token', type=str, help="Token, use your login and login at /login for a token.\nIf you don't have a login, you can register at /register", required=True)
+
 
 @api.route('/keywords', doc={
     "description": "Endpoint which retrieves all the keywords ever used to classify IMDB movies."
@@ -449,6 +501,11 @@ class Keywords(Resource):
         analytics_api_call_count['keywords'] += 1
         keywords_record = keywordsDF
         args = keyword_parser.parse_args()
+        if 'token' not in args or not valid_token(args["token"]):
+            return {
+                       'error': 'Unauthorised',
+                       'message': ' Invalid token'
+                   }, 401
         keywords_record, response_message, response_code = pagination(request, args, keywords_record)
 
         if keywords_record.empty:
@@ -479,6 +536,8 @@ movie_parser.add_argument('budget', type=int, help="Movie budget.")
 movie_parser.add_argument('revenue', type=int, help="Movie revenue.")
 movie_parser.add_argument('offset', type=int, help="An integer indicating the distance between the first record and the input offset record.\nDefault value: 0.")
 movie_parser.add_argument('limit', type=int, help="Number of results returned per query.\nDefault value: 20 records.")
+movie_parser.add_argument('token', type=str, help="Token, use your login and login at /login for a token.\nIf you don't have a login, you can register at /register", required=True)
+
 
 @api.route('/movies', doc={
     "description": "Endpoint which gets all movies and each of their corresponding information, or accepts parameters to refine the list of movies returned."
@@ -500,6 +559,11 @@ class Movies(Resource):
         movie_record = movieDF
         expr = '(?=.*{})'
         args = movie_parser.parse_args()
+        if 'token' not in args or not valid_token(args["token"]):
+            return {
+                       'error': 'Unauthorised',
+                       'message': ' Invalid token'
+                   }, 401
 
 
         if 'name' in args and args['name'] is not None:
@@ -558,11 +622,15 @@ class Movies(Resource):
 
 
 # -- Specific Movie --
+spec_movie_parser = reqparse.RequestParser()
+spec_movie_parser.add_argument('token', type=str, help="Token, use your login and login at /login for a token.\nIf you don't have a login, you can register at /register", required=True)
+
 @api.route('/movies/<int:movie_id>', doc={
     "description": "Endpoint which gets a specific movie and their corresponding information based on a unique id number."
 })
 class SpecificMovie(Resource):
     @api.doc('get_specific_movie')
+    @api.expect(spec_movie_parser)
     @api.response(200, 'Success. Collection entry retrieved.')
     @api.response(400, 'Bad request. Incorrect syntax.')
     @api.response(401, 'Unauthorised access to collection.')
@@ -570,6 +638,12 @@ class SpecificMovie(Resource):
     @api.response(404, 'Not found. Collection not found.')
     @api.response(500, 'Internal Service Error.')
     def get(self, movie_id):
+        args = spec_movie_parser.parse_args()
+        if 'token' not in args or not valid_token(args["token"]):
+            return {
+                       'error': 'Unauthorised',
+                       'message': ' Invalid token'
+                   }, 401
         global analytics_api_call_count
         analytics_api_call_count['specific movie'] += 1
         if not movieDF.index.isin([movie_id]).any():
@@ -592,6 +666,8 @@ writer_parser = reqparse.RequestParser()
 writer_parser.add_argument('name', type=str, help="Name of the screenwriter queried.")
 writer_parser.add_argument('offset', type=int, help="An integer indicating the distance between the first record and the input offset record.\nDefault value: 0.")
 writer_parser.add_argument('limit', type=int, help="Number of results returned per query.\nDefault value: 20 records.")
+writer_parser.add_argument('token', type=str, help="Token, use your login and login at /login for a token.\nIf you don't have a login, you can register at /register", required=True)
+
 
 @api.route('/screenwriters', doc={
     "description": "Endpoint which gets all screenwriters and each of their corresponding information, or accepts parameters to refine the list of screenwriters returned."
@@ -611,6 +687,11 @@ class Screenwriter(Resource):
         analytics_api_call_count['screenwriters'] += 1
 
         args = writer_parser.parse_args()
+        if 'token' not in args or not valid_token(args["token"]):
+            return {
+                       'error': 'Unauthorised',
+                       'message': ' Invalid token'
+                   }, 401
         writer_record = screenwriterDF
         if 'name' in args and args['name'] is not None:
             writer_name = args['name'].lower().strip('\'').strip('\"')
@@ -658,11 +739,15 @@ class Screenwriter(Resource):
         return response_message, 200
 
 # -- Specific Writer --
+spec_screenwrit_parser = reqparse.RequestParser()
+spec_screenwrit_parser.add_argument('token', type=str, help="Token, use your login and login at /login for a token.\nIf you don't have a login, you can register at /register", required=True)
+
 @api.route('/screenwriters/<int:screenwriter_id>', doc={
     "description": "Endpoint which gets a specific screenwriter and their corresponding information based on a unique id number."
 })
 class SpecificScreenwriter(Resource):
     @api.doc('get_specific_screenwriter')
+    @api.expect(spec_screenwrit_parser)
     @api.response(200, 'Success. Collection entry retrieved.')
     @api.response(400, 'Bad request. Incorrect syntax.')
     @api.response(401, 'Unauthorised access to collection.')
@@ -670,6 +755,12 @@ class SpecificScreenwriter(Resource):
     @api.response(404, 'Not found. Collection not found.')
     @api.response(500, 'Internal Service Error.')
     def get(self, screenwriter_id):
+        args = spec_screenwrit_parser.parse_args()
+        if 'token' not in args or not valid_token(args["token"]):
+            return {
+                       'error': 'Unauthorised',
+                       'message': ' Invalid token'
+                   }, 401
         global analytics_api_call_count
         global top_screenwriter
         analytics_api_call_count['specific screenwriter'] += 1
@@ -770,15 +861,24 @@ def pagination(request, args, record):
         }, 200
 
 
+top_act_parser = reqparse.RequestParser()
+top_act_parser.add_argument('token', type=str, help="Token, use your login and login at /login for a token.\nIf you don't have a login, you can register at /register", required=True)
 
 @api.route('/analytics_top_actor')
 class TopActorAnalytics(Resource):
     @api.doc('get_analytics_top_actor')
+    @api.expect(top_act_parser)
     @api.response(200, 'Success. Collection entries retrieved.')
     @api.response(400, 'Bad request. Incorrect syntax.')
     @api.response(404, 'Not found. Collection not found.')
     def get(self):
         global top_actor
+        args = top_act_parser.parse_args()
+        if 'token' not in args or not valid_token(args["token"]):
+            return {
+                       'error': 'Unauthorised',
+                       'message': ' Invalid token'
+                   }, 401
         # print(top_actor)
         # sorted(top_actor, key=numbermap.__getitem__)
         response = { "href": "http://127.0.0.1:5000/analytics_top_actor",
@@ -789,15 +889,24 @@ class TopActorAnalytics(Resource):
         response['analytics_top_actor'] = top_actor
         return response, 200
 
+top_movAnal_parser = reqparse.RequestParser()
+top_movAnal_parser.add_argument('token', type=str, help="Token, use your login and login at /login for a token.\nIf you don't have a login, you can register at /register", required=True)
 
 @api.route('/analytics_top_movie')
 class TopMovieAnalytics(Resource):
     @api.doc('get_analytics_top_movie')
+    @api.expect(top_movAnal_parser)
     @api.response(200, 'Success. Collection entries retrieved.')
     @api.response(400, 'Bad request. Incorrect syntax.')
     @api.response(404, 'Not found. Collection not found.')
     def get(self):
         global top_movie
+        args = top_movAnal_parser.parse_args()
+        if 'token' not in args or not valid_token(args["token"]):
+            return {
+                       'error': 'Unauthorised',
+                       'message': ' Invalid token'
+                   }, 401
         # print(top_actor)
         # sorted(top_actor, key=numbermap.__getitem__)
         response = { "href": "http://127.0.0.1:5000/analytics_top_movie",
@@ -808,15 +917,24 @@ class TopMovieAnalytics(Resource):
         response['analytics_top_movie'] = top_movie
         return response, 200
 
+top_dir_parser = reqparse.RequestParser()
+top_dir_parser.add_argument('token', type=str, help="Token, use your login and login at /login for a token.\nIf you don't have a login, you can register at /register", required=True)
 
 @api.route('/analytics_top_director')
 class TopMovieAnalytics(Resource):
     @api.doc('get_analytics_top_director')
+    @api.expect(top_dir_parser)
     @api.response(200, 'Success. Collection entries retrieved.')
     @api.response(400, 'Bad request. Incorrect syntax.')
     @api.response(404, 'Not found. Collection not found.')
     def get(self):
         global top_director
+        args = top_dir_parser.parse_args()
+        if 'token' not in args or not valid_token(args["token"]):
+            return {
+                       'error': 'Unauthorised',
+                       'message': ' Invalid token'
+                   }, 401
         # print(top_actor)
         # sorted(top_actor, key=numbermap.__getitem__)
         response = { "href": "http://127.0.0.1:5000/analytics_top_director",
@@ -828,14 +946,24 @@ class TopMovieAnalytics(Resource):
         return response, 200
 
 
+top_screen_parser = reqparse.RequestParser()
+top_screen_parser.add_argument('token', type=str, help="Token, use your login and login at /login for a token.\nIf you don't have a login, you can register at /register", required=True)
+
 @api.route('/analytics_top_screenwriter')
 class TopScreenwriterAnalytics(Resource):
     @api.doc('get_analytics_top_screenwriter')
+    @api.expect(top_screen_parser)
     @api.response(200, 'Success. Collection entries retrieved.')
     @api.response(400, 'Bad request. Incorrect syntax.')
     @api.response(404, 'Not found. Collection not found.')
     def get(self):
         global top_screenwriter
+        args = top_screen_parser.parse_args()
+        if 'token' not in args or not valid_token(args["token"]):
+            return {
+                       'error': 'Unauthorised',
+                       'message': ' Invalid token'
+                   }, 401
         # print(top_actor)
         # sorted(top_actor, key=numbermap.__getitem__)
         response = { "href": "http://127.0.0.1:5000/analytics_top_director",
