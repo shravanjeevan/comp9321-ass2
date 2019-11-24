@@ -5,33 +5,45 @@
   <h1>Movie IMDB Score Predictor</h1>
 </center>
 
+<div class="form-group">
+<label for="Director">Director</label>
+<select class="form-control">
+  {% for dir in directors[1:] %}
+   <option>{{dir}}</option>
+  {% endfor %}
+</select>
+<small id="directorHelp" class="form-text text-muted">Please select the director of your film</small>
+</div>
+
 <form>
   <div class="form-group">
-    <label for="Director">Director</label>
-    <input type="text" class="form-control" id="directorInput" aria-describedby="directorHelp" placeholder="Director Name">
-    <small id="directorHelp" class="form-text text-muted">Please enter the director of your film</small>
-  </div>
-  <div class="form-group">
     <label for="Genre">Genre</label>
-    <input type="text" class="form-control" id="genreInput" placeholder="Genre">
-    <small id="directorHelp" class="form-text text-muted">Please enter the genre of your film</small>
-    <div class="form-group">
-  </div>
+    <select class="form-control">
+      {% for gen in genres[1:] %}
+       <option>{{gen}}</option>
+      {% endfor %}
+    </select>
+    <small id="genreHelp" class="form-text text-muted">Please select the genre of your film</small>
+</div>
+
   <div class="form-group">
    <label for="Actors">Actors</label>
-   <small id="actorsHelp" class="form-text text-muted">Please select the actors in your film</small>
    <select multiple class="form-control" id="exampleFormControlSelect2">
-     <option>1</option>
-     <option>2</option>
-     <option>3</option>
-     <option>4</option>
-     <option>5</option>
+     {% for actor in actors[1:] %}
+      <option>{{actor}}</option>
+     {% endfor %}
    </select>
+   <small id="actorsHelp" class="form-text text-muted">Please select the actors in your film</small>
  </div>
-  </div>
+
+ <div class="form-group">
+  <label for="budget">Budget</label>
+  <input type="number" class="form-control" id="exampleInputEmail1" aria-describedby="budgetHelp">
+  <small id="budgetHelp" class="form-text text-muted">Please enter the budget of your film</small>
+</div>
 
   <center>
-  <button type="submit" class="btn btn-primary">Predict Rating</button>
+  <button type="submit" class="btn btn-primary">Predict Score</button>
   </center>
 </form>
 

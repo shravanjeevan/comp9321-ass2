@@ -36,7 +36,7 @@ directorDF, screenwriterDF, actorDF, keywordsDF, genresDF, movieDF = process_dat
 #         description="Actor gender",
 #         enum=["F", "M", "O"]
 #     )
-# }) 
+# })
 
 
 # directors_model = api.model('DirectorsModel', {
@@ -81,7 +81,7 @@ class Actors(Resource):
         if 'name' in args and args['name'] is not None:
             actor_name = args['name'].lower().strip('\'').strip('\"')
 
-            # Old way (just in case we need it) 
+            # Old way (just in case we need it)
             # q = 'actor_name == \'' + actor_name + '\''
             # actor_record = actor_record.query(q)
 
@@ -102,7 +102,7 @@ class Actors(Resource):
                 'error': 'Not Found',
                 'message': 'Collection was not found'
             }, 404
-        
+
         if(len(actor_record.index) == 1):
             response['actor'] = actor_record.to_dict(orient='index')
         else :
@@ -148,7 +148,7 @@ class Director(Resource):
     @api.response(404, 'Not found. Collection not found.')
     def get(self):
         global directorDF
-        
+
         args = director_parser.parse_args()
         director_record = directorDF
         if 'name' in args and args['name'] is not None:
@@ -214,7 +214,7 @@ class Screenwriter(Resource):
     @api.response(404, 'Not found. Collection not found.')
     def get(self):
         global screenwriterDF
-        
+
         args = writer_parser.parse_args()
         writer_record = screenwriterDF
         if 'name' in args and args['name'] is not None:
@@ -313,14 +313,14 @@ class Movies(Resource):
         if 'genre' in args and args['genre'] is not None:
             words = args['genre'].lower().strip('\'').strip('\"').split(',')
             movie_record = movie_record[movie_record["genres"].str.contains(r''.join(expr.format(w) for w in words), regex=True)]
-        
+
         # TODO Discuss whether budget should be <= or >=
         if 'budget' in args and args['budget'] is not None:
             movie_record = movie_record[movie_record["budget"] >= args['budget']]
 
         if 'revenue' in args and args['revenue'] is not None:
             movie_record = movie_record[movie_record["revenue"] >= args['revenue']]
-        
+
         movie_record, response = pagination(request, args, movie_record)
 
         if movie_record.empty:
@@ -328,7 +328,7 @@ class Movies(Resource):
                 'error': 'Not Found',
                 'message': 'Collection was not found'
             }, 404
-        
+
         if(len(movie_record.index) == 1):
             response['movie'] = movie_record.to_dict(orient='index')
         else :
@@ -554,12 +554,12 @@ class IMDBScorePredictor(Resource):
 #                 'message': 'Collection was not found'
 #             }, 404
 
-#         return { 
+#         return {
 #             'task_id': taskid,
 #             'task_information': tasks[taskid]
 #         }, 200
-    
-    
+
+
 #     @api.doc('delete_a_task')
 #     @api.response(200, 'Success. Collection was deleted.')
 #     @api.response(404, 'Not found. Collection was not found')
@@ -574,14 +574,17 @@ class IMDBScorePredictor(Resource):
 #         del tasks[taskid]
 
 #         if taskid not in tasks:
-#             return { 
+#             return {
 #                 'message': 'Collection deleted successfully.'
 #             }, 200
 
 # APP ROUTING FUNCTIONS
 @app.route('/home', methods=['GET'])
 def index():
-    return render_template('index.html')
+
+    return render_template('index.html', directors=list(directorDF['director_name']),
+                                         actors=list(actorDF['actor_name']),
+                                         genres=list(genresDF['genres']))
 
 if __name__ == '__main__':
     app.run(debug=True, use_reloader=True)
