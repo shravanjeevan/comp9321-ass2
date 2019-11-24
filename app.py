@@ -21,7 +21,7 @@ app = Flask(__name__)
 api = Api(app, title='COMP9321 Assignment 2 - API Documentation', validate=True)
 
 # GLOBAL VARIABLES
-directorDF, screenwriterDF, actorDF, keywordsDF, genresDF, movieDF = process_dataset2()
+actor_average, directorDF, screenwriterDF, actorDF, keywordsDF, genresDF, movieDF = process_dataset2()
 global analytics
 analytics = {
     'actors': 0,
@@ -602,7 +602,8 @@ class IMDBScorePredictor(Resource):
                 }, 404
             actor2_likes = actor2['facebook_likes'].iloc[0]
         else :
-            actor2_likes = 1000
+            actor2_likes = actor_average
+            print(actor2_likes)
 
         # ACTOR 3
         if 'actor_3_name' in args and args['actor_3_name'] is not None:
@@ -616,7 +617,7 @@ class IMDBScorePredictor(Resource):
                 }, 404
             actor3_likes = actor3['facebook_likes'].iloc[0]
         else :
-            actor3_likes = 1000
+            actor3_likes = actor_average
 
         return {
             'movie_prediction_score': predict_score(director_likes,actor1_likes,actor2_likes,actor3_likes,budget)[1:-1]

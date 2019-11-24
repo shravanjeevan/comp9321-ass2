@@ -233,12 +233,14 @@ def process_dataset2(): # USE THIS ONE JUST FOR API DATA POINTS
     result_columns          = ['title', 'cast', 'directors', 'screenwriters', 'genres', 'keywords', 'budget', 'revenue', 'popularity', 'vote_average']
     result                  = result[result_columns]
 
-    return directordf, screenwriterdf, actordf, keyworddf, genredf, result
+    actor_average = actordf['facebook_likes'].mean(axis=0)
+
+    return actor_average, directordf, screenwriterdf, actordf, keyworddf, genredf, result
     
 
 if __name__ == '__main__':
     # process_dataset1()
-    directordf, screenwriterdf, actordf, keyworddf, genredf, result = process_dataset2()
+    actor_average, directordf, screenwriterdf, actordf, keyworddf, genredf, result = process_dataset2()
     # print(genredf)
     # print(actordf)
     # print(keyworddf)
