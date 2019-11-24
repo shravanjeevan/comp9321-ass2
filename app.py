@@ -332,6 +332,7 @@ class SpecificDirector(Resource):
     @api.doc('get_specific_director')
     @api.expect(spec_dir_parser)
     @api.response(200, 'Success. Collection entries retrieved.')
+    @api.response(401, 'Unauthorised. Invalid token.')
     @api.response(400, 'Bad request. Incorrect syntax.')
     @api.response(404, 'Not found. Collection not found.')
     def get(self, director_id):
@@ -908,6 +909,7 @@ class TopActorAnalytics(Resource):
     @api.expect(top_act_parser)
     @api.response(200, 'Success. Collection entries retrieved.')
     @api.response(400, 'Bad request. Incorrect syntax.')
+    @api.response(401, 'Unauthorised. Invalid token.')
     @api.response(404, 'Not found. Collection not found.')
     def get(self):
         global top_actor
@@ -936,6 +938,7 @@ class TopMovieAnalytics(Resource):
     @api.expect(top_movAnal_parser)
     @api.response(200, 'Success. Collection entries retrieved.')
     @api.response(400, 'Bad request. Incorrect syntax.')
+    @api.response(401, 'Unauthorised. Invalid token.')
     @api.response(404, 'Not found. Collection not found.')
     def get(self):
         global top_movie
@@ -964,6 +967,7 @@ class TopMovieAnalytics(Resource):
     @api.expect(top_dir_parser)
     @api.response(200, 'Success. Collection entries retrieved.')
     @api.response(400, 'Bad request. Incorrect syntax.')
+    @api.response(401, 'Unauthorised. Invalid token.')
     @api.response(404, 'Not found. Collection not found.')
     def get(self):
         global top_director
@@ -993,6 +997,7 @@ class TopScreenwriterAnalytics(Resource):
     @api.expect(top_screen_parser)
     @api.response(200, 'Success. Collection entries retrieved.')
     @api.response(400, 'Bad request. Incorrect syntax.')
+    @api.response(401, 'Unauthorised. Invalid token.')
     @api.response(404, 'Not found. Collection not found.')
     def get(self):
         global top_screenwriter
