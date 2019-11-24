@@ -46,6 +46,9 @@ def training():
 def predict_score(i_director_facebook_likes, i_actor_1_facebook_likes, i_actor_2_facebook_likes, i_actor_3_facebook_likes,  i_budget):
     # values that need to be provided are: num_critic_for_reviews, director_facebook_likes, actor_1_facebook_likes, num_voted_users, cast_total_facebook_likes, num_user_for_reviews, budget, actor_2_facebook_likes, movie_facebook_likes
     # num_critic_for_reviews = 200
+    # num_voted_users = 80000
+    # num_user_for_reviews = 5000
+    # imdb_score = ?
     director_facebook_likes = i_director_facebook_likes
     actor_1_facebook_likes = i_actor_1_facebook_likes
     # num_voted_users = 80000

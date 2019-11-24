@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request
 from flask_restplus import Api, fields, inputs, Resource, reqparse
 from urllib.parse import quote_plus as urlencode
-
+import json
 from preprocess import process_dataset2
 from machinelearning import predict_score
 
@@ -22,6 +22,20 @@ api = Api(app, title='COMP9321 Assignment 2 - API Documentation', validate=True)
 
 # GLOBAL VARIABLES
 directorDF, screenwriterDF, actorDF, keywordsDF, genresDF, movieDF = process_dataset2()
+global analytics
+analytics = {
+    'actors': 0,
+    'specific actor': 0,
+    'directors': 0,
+    'specific director': 0,
+    'screenwriters': 0,
+    'specific screenwriter': 0,
+    'movies': 0,
+    'specific movie': 0,
+    'keywords': 0,
+    'genres': 0,
+    'score predictor': 0
+}
 
 # TODO Refer to these links for api creation:
 # https://flask-restplus.readthedocs.io/en/stable/quickstart.html
@@ -88,7 +102,8 @@ class Actors(Resource):
     @api.response(404, 'Not found. Collection not found.')
     def get(self):
         global actorDF
-
+        global analytics
+        analytics['actors'] += 1
         args = actors_parser.parse_args()
         actor_record = actorDF
 
@@ -134,6 +149,8 @@ class SpecificActor(Resource):
     @api.response(404, 'Not found. Collection not found.')
     def get(self, actor_id):
         # print()
+        global analytics
+        analytics['specific actor'] += 1
         if not actorDF.index.isin([actor_id]).any():
             return {
                 'error': 'Not Found',
@@ -163,6 +180,8 @@ class Director(Resource):
     @api.response(404, 'Not found. Collection not found.')
     def get(self):
         global directorDF
+        global analytics
+        analytics['directors'] += 1
 
         args = director_parser.parse_args()
         director_record = directorDF
@@ -199,6 +218,8 @@ class SpecificDirector(Resource):
     @api.response(400, 'Bad request. Incorrect syntax.')
     @api.response(404, 'Not found. Collection not found.')
     def get(self, director_id):
+        global analytics
+        analytics['specific director'] += 1
         if not directorDF.index.isin([director_id]).any():
             return {
                 'error': 'Not Found',
@@ -229,6 +250,8 @@ class Screenwriter(Resource):
     @api.response(404, 'Not found. Collection not found.')
     def get(self):
         global screenwriterDF
+        global analytics
+        analytics['screenwriters'] += 1
 
         args = writer_parser.parse_args()
         writer_record = screenwriterDF
@@ -263,6 +286,8 @@ class Screenwriter(Resource):
     @api.response(400, 'Bad request. Incorrect syntax.')
     @api.response(404, 'Not found. Collection not found.')
     def get(self, screenwriter_id):
+        global analytics
+        analytics['specific screenwriter'] += 1
         if not screenwriterDF.index.isin([screenwriter_id]).any():
             return {
                 'error': 'Not Found',
@@ -300,6 +325,8 @@ class Movies(Resource):
     @api.response(404, 'Not found. Collection not found.')
     def get(self):
         global movieDF
+        global analytics
+        analytics['movies'] += 1
         movie_record = movieDF
         expr = '(?=.*{})'
         args = movie_parser.parse_args()
@@ -354,13 +381,14 @@ class Movies(Resource):
 
 # -- Specific Movie
 @api.route('/movies/<int:movie_id>')
-class SpecificActor(Resource):
+class SpecificMovie(Resource):
     @api.doc('get_specific_movie')
     @api.response(200, 'Success. Collection entries retrieved.')
     @api.response(400, 'Bad request. Incorrect syntax.')
     @api.response(404, 'Not found. Collection not found.')
     def get(self, movie_id):
-
+        global analytics
+        analytics['specific movie'] += 1
         if not movieDF.index.isin([movie_id]).any():
             return {
                 'error': 'Not Found',
@@ -388,6 +416,8 @@ class Keywords(Resource):
     @api.response(404, 'Not found. Collection not found.')
     def get(self):
         global keywordsDF
+        global analytics
+        analytics['keywords'] += 1
         keywords_record = keywordsDF
         args = keyword_parser.parse_args()
         keywords_record, response = pagination(request, args, keywords_record)
@@ -419,6 +449,8 @@ class Genres(Resource):
     @api.response(404, 'Not found. Collection not found.')
     def get(self):
         global genresDF
+        global analytics
+        analytics['genres'] += 1
         genres_record = genresDF
         args = genre_parser.parse_args()
         genres_record, response = pagination(request, args, genres_record)
@@ -528,6 +560,8 @@ class IMDBScorePredictor(Resource):
     @api.response(400, 'Bad request. Incorrect syntax.')
     @api.response(404, 'Not found. Collection not found.')
     def get(self):
+        global analytics
+        analytics['score predictor'] += 1
         args = imdb_score_parser.parse_args()
         director_facebook_likes = args['director_facebook_likes']
         actor_1_facebook_likes = args['actor_1_facebook_likes']
@@ -543,6 +577,23 @@ class IMDBScorePredictor(Resource):
         }, 200
 
 
+@api.route('/analytics')
+class Analytics(Resource):
+    @api.doc('get_analytics')
+    # @api.expect(analytics_parser)
+    @api.response(200, 'Success. Collection entries retrieved.')
+    @api.response(400, 'Bad request. Incorrect syntax.')
+    @api.response(404, 'Not found. Collection not found.')
+    def get(self):
+        global analytics
+        # print(json.dumps(analytics)) 
+        response = { "href": "http://127.0.0.1:5000/analytics",
+                    "results_shown": len(analytics),
+                    "total_results": len(analytics),
+                    "analytics": ""
+                }
+        response['analytics'] = analytics
+        return response, 200
 # # Example only
 # tasks = {
 #     'task1': {
@@ -603,6 +654,45 @@ def index():
     return render_template('index.html', directors=list(directorDF['director_name']),
                                          actors=list(actorDF['actor_name']),
                                          genres=list(genresDF['genres']))
+
+@app.route('/imdbscoreprediction_ui', methods=['GET'])
+def imdbscoreprediction_ui():
+
+    return render_template('imdbscoreprediction.html', directors=list(directorDF['director_name']),
+                                         actors=list(actorDF['actor_name']),
+                                         genres=list(genresDF['genres']))
+
+@app.route('/genres_ui', methods=['GET'])
+def genres_ui():
+
+    return render_template('genres.html', genres=list(genresDF['genres']))
+
+@app.route('/directors_ui', methods=['GET'])
+def directors_ui():
+
+    return render_template('directors.html')
+
+@app.route('/actors_ui', methods=['GET'])
+def actors_ui():
+
+    return render_template('actors.html')
+
+@app.route('/keywords_ui', methods=['GET'])
+def keywords_ui():
+
+    return render_template('keywords.html')
+
+@app.route('/movies_ui', methods=['GET'])
+def movies_ui():
+
+    return render_template('movies.html')
+
+@app.route('/screenwriters_ui', methods=['GET'])
+def screenwriters_ui():
+
+    return render_template('screenwriters.html')
+
+
 
 if __name__ == '__main__':
     app.run(debug=True, use_reloader=True)
