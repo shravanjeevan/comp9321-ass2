@@ -586,5 +586,44 @@ def index():
                                          actors=list(actorDF['actor_name']),
                                          genres=list(genresDF['genres']))
 
+@app.route('/imdbscoreprediction_ui', methods=['GET'])
+def imdbscoreprediction_ui():
+
+    return render_template('imdbscoreprediction.html', directors=list(directorDF['director_name']),
+                                         actors=list(actorDF['actor_name']),
+                                         genres=list(genresDF['genres']))
+
+@app.route('/genres_ui', methods=['GET'])
+def genres_ui():
+
+    return render_template('genres.html', genres=list(genresDF['genres']))
+
+@app.route('/directors_ui', methods=['GET'])
+def directors_ui():
+
+    return render_template('directors.html')
+
+@app.route('/actors_ui', methods=['GET'])
+def actors_ui():
+
+    return render_template('actors.html')
+
+@app.route('/keywords_ui', methods=['GET'])
+def keywords_ui():
+
+    return render_template('keywords.html')
+
+@app.route('/movies_ui', methods=['GET'])
+def movies_ui():
+
+    return render_template('movies.html')
+
+@app.route('/screenwriters_ui', methods=['GET'])
+def screenwriters_ui():
+
+    return render_template('screenwriters.html')
+
+
+
 if __name__ == '__main__':
     app.run(debug=True, use_reloader=True)
