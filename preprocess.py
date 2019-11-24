@@ -53,14 +53,19 @@ def process_dataset_forML(df): # USE THIS ONE FOR ML MAYBE
 #CREATING MORE DFs FOR USE BY API
 
 def process_dataset2(): # USE THIS ONE JUST FOR API DATA POINTS
-    df=pd.read_csv("datasets/tmdb_5000_movies.csv")
-    df1=pd.read_csv("datasets/tmdb_5000_credits.csv")
-
+    df  = pd.read_csv("datasets/tmdb_5000_movies.csv")
+    df1 = pd.read_csv("datasets/tmdb_5000_credits.csv")
+    df2 = pd.read_csv("datasets/movie_metadata.csv")
     # merging datasets
     df      = df.drop(["title"], axis=1) 
     df      = df.set_index('id')
     df1     = df1.set_index('movie_id')
     result  = pd.concat([df, df1], axis=1, join='inner')
+
+    df2_columns = ['director_name', 'director_facebook_likes', 'actor_1_name', 'actor_1_facebook_likes', 'actor_2_name', 'actor_2_facebook_likes', 'actor_3_name', 'actor_3_facebook_likes']
+    df2 = df2[df2_columns]
+    df2 = df2.replace(0,float("NaN"))
+    df2 = df2.dropna(axis=0, how='any')
 
     result_columns          = ['title', 'cast', 'crew', 'genres', 'keywords', 'budget', 'revenue', 'popularity', 'vote_average']
     result                  = result[result_columns]
@@ -85,8 +90,8 @@ def process_dataset2(): # USE THIS ONE JUST FOR API DATA POINTS
     # For creating new dataframes
     keyword_resource = []
     genre_resource = []
-    actors_resource = []
-    genders_resource = []
+    actors_resource = {}
+    # genders_resource = []
     directors_resource = []
     writers_resource = []
 
@@ -137,13 +142,15 @@ def process_dataset2(): # USE THIS ONE JUST FOR API DATA POINTS
             if actor['order'] > 10: continue # only taking the top 10 actors per movie
             name = actor['name'].lower().strip()
             if name not in actors_resource:
-                actors_resource.append(name)
                 if actor['gender'] == 2:
-                    genders_resource.append('M')
+                    actors_resource[name] = 'M'
+                    # genders_resource.append('M')
                 elif actor['gender'] == 1 :
-                    genders_resource.append('F')
+                    actors_resource[name] = 'F'
+                    # genders_resource.append('F')
                 else :
-                    genders_resource.append('O')
+                    actors_resource[name] = 'O'
+                    # genders_resource.append('O')
             caststr += name + "|"
 
         # Append for df
@@ -153,13 +160,39 @@ def process_dataset2(): # USE THIS ONE JUST FOR API DATA POINTS
         modifiedKeywords.append(keywordstr[:-1])
         modifiedCast.append(caststr[:-1])
 
+    actor_fb_likes = {}
+    director_fb_likes = {}
+    for i in range(len(df2.index)) :
+        name = str(df2['actor_1_name'].iloc[i])
+        name = name.lower().strip()
+        if name not in actor_fb_likes :
+            actor_fb_likes[name] = df2['actor_1_facebook_likes'].iloc[i]
+        name = str(df2['actor_2_name'].iloc[i])
+        name = name.lower().strip()
+        if name not in actor_fb_likes :
+            actor_fb_likes[name] = df2['actor_2_facebook_likes'].iloc[i]
+        name = str(df2['actor_3_name'].iloc[i])
+        name = name.lower().strip()
+        if name not in actor_fb_likes :
+            actor_fb_likes[name] = df2['actor_3_facebook_likes'].iloc[i]
+        name = str(df2['director_name'].iloc[i])
+        name = name.lower().strip()
+        if name not in director_fb_likes :
+            director_fb_likes[name] = df2['director_facebook_likes'].iloc[i]
+        
     # Creating the Dataframes
-    actordf = pd.DataFrame({'actor_name': actors_resource, 'gender': genders_resource})
+    genderdf = pd.Series(actors_resource, name='gender')
+    actorlikesdf = pd.Series(actor_fb_likes, name='facebook_likes')    
+    actorlikesdf = actorlikesdf.to_frame()
+    actorlikesdf.index.name = 'actor_name'
+    genderdf = genderdf.to_frame()
+    genderdf.index.name = 'actor_name'
+    actordf  = pd.concat([genderdf, actorlikesdf], axis=1, join='inner')
+    actordf = actordf.reset_index()
     actordf = actordf.drop_duplicates()
     actordf = actordf.sort_values(by=["actor_name"])
     actordf = actordf.reset_index()
     actordf = actordf.drop(['index'], axis=1)
-
     keyworddf = pd.DataFrame(keyword_resource, columns=['keywords'])
     keyworddf = keyworddf.drop_duplicates()
     keyworddf = keyworddf.sort_values(by=["keywords"])
@@ -173,6 +206,11 @@ def process_dataset2(): # USE THIS ONE JUST FOR API DATA POINTS
     genredf = genredf.drop(['index'], axis=1)
 
     directordf = pd.DataFrame(directors_resource, columns=['director_name'])
+    directorlikesdf = pd.Series(director_fb_likes, name='facebook_likes')
+    directorlikesdf = directorlikesdf.to_frame()
+    directorlikesdf.index.name = 'director_name'
+    directorlikesdf = directorlikesdf.reset_index()
+    directordf = directordf.merge(directorlikesdf, on='director_name', how='inner', suffixes=('_1', '_2'))
     directordf = directordf.drop_duplicates()
     directordf = directordf.sort_values(by=["director_name"])
     directordf = directordf.reset_index()
@@ -195,12 +233,14 @@ def process_dataset2(): # USE THIS ONE JUST FOR API DATA POINTS
     result_columns          = ['title', 'cast', 'directors', 'screenwriters', 'genres', 'keywords', 'budget', 'revenue', 'popularity', 'vote_average']
     result                  = result[result_columns]
 
-    return directordf, screenwriterdf, actordf, keyworddf, genredf, result
+    actor_average = actordf['facebook_likes'].mean(axis=0)
+
+    return actor_average, directordf, screenwriterdf, actordf, keyworddf, genredf, result
     
 
 if __name__ == '__main__':
     # process_dataset1()
-    directordf, screenwriterdf, actordf, keyworddf, genredf, result = process_dataset2()
+    actor_average, directordf, screenwriterdf, actordf, keyworddf, genredf, result = process_dataset2()
     # print(genredf)
     # print(actordf)
     # print(keyworddf)
@@ -220,4 +260,4 @@ if __name__ == '__main__':
     # print("===================== FIRST 3 RESULTS ===================")
     # print(result.head(3).to_string())
     # print(moviesbykeywords)
-    print(process_dataset_forML(pd.read_csv("datasets/movie_metadata.csv")).columns)
+    # print(process_dataset_forML(pd.read_csv("datasets/movie_metadata.csv")).columns)

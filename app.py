@@ -21,9 +21,8 @@ app = Flask(__name__)
 api = Api(app, title='COMP9321 Assignment 2 - API Documentation')
 
 # GLOBAL VARIABLES
-directorDF, screenwriterDF, actorDF, keywordsDF, genresDF, movieDF = process_dataset2()
-global analytics
-analytics = {
+actor_average, directorDF, screenwriterDF, actorDF, keywordsDF, genresDF, movieDF = process_dataset2()
+analytics_api_call_count = {
     'actors': 0,
     'specific actor': 0,
     'directors': 0,
@@ -36,6 +35,11 @@ analytics = {
     'genres': 0,
     'score predictor': 0
 }
+
+top_actor = dict()
+top_movie = dict()
+top_director = dict()
+top_screenwriter = dict()
 
 # TODO Refer to these links for api creation:
 # https://flask-restplus.readthedocs.io/en/stable/quickstart.html
@@ -68,8 +72,9 @@ class Actors(Resource):
     @api.response(500, 'Internal Service Error.')
     def get(self):
         global actorDF
-        global analytics
-        analytics['actors'] += 1
+        global analytics_api_call_count
+        global top_actor
+        analytics_api_call_count['actors'] += 1
         args = actors_parser.parse_args()
         actor_record = actorDF
 
@@ -100,6 +105,13 @@ class Actors(Resource):
         elif response_code != 200:
             return response_message, response_code
 
+        first_actor = actor_record['actor_name'].iloc[0]
+        if first_actor in top_actor:
+            top_actor[first_actor] += 1
+        else:
+            top_actor[first_actor] = 1
+        # print(top_actor)
+        print(actor_record['actor_name'].iloc[0])
         if(len(actor_record.index) == 1):
             response_message['actor'] = actor_record.to_dict(orient='index')
         else :
@@ -120,8 +132,8 @@ class SpecificActor(Resource):
     @api.response(404, 'Not found. Collection not found.')
     @api.response(500, 'Internal Service Error.')
     def get(self, actor_id):
-        global analytics
-        analytics['specific actor'] += 1
+        global analytics_api_call_count
+        analytics_api_call_count['specific actor'] += 1
         if not actorDF.index.isin([actor_id]).any():
             return {
                 'error': 'Not Found',
@@ -135,7 +147,7 @@ class SpecificActor(Resource):
         }, 200
 
 # -- Analytics --
-@api.route('/analytics', doc={
+@api.route('/analytics_api_call_count', doc={
     "description": "Endpoint which returns API usage metrics, such as number of times an endpoint has been called."
 })
 class Analytics(Resource):
@@ -147,14 +159,14 @@ class Analytics(Resource):
     @api.response(404, 'Not found. Collection not found.')
     @api.response(500, 'Internal Service Error.')
     def get(self):
-        global analytics
+        global analytics_api_call_count
         # print(json.dumps(analytics)) 
         response = { "href": request.base_url,
-                    "results_shown": len(analytics),
-                    "total_results": len(analytics),
-                    "analytics": ""
+                    "results_shown": len(analytics_api_call_count),
+                    "total_results": len(analytics_api_call_count),
+                    "analytics_api_call_count": ""
                 }
-        response['analytics'] = analytics
+        response['analytics_api_call_count'] = analytics_api_call_count
         return response, 200
 
 # -- Directors --
@@ -178,8 +190,9 @@ class Director(Resource):
     @api.response(500, 'Internal Service Error.')
     def get(self):
         global directorDF
-        global analytics
-        analytics['directors'] += 1
+        global analytics_api_call_count
+        global top_director
+        analytics_api_call_count['directors'] += 1
 
         args = director_parser.parse_args()
         director_record = directorDF
@@ -196,6 +209,12 @@ class Director(Resource):
             }, 404
         elif response_code != 200:
             return response_message, response_code
+
+        first_director = director_record['director_name'].iloc[0]
+        if first_director in top_director:
+            top_director[first_director] += 1
+        else:
+            top_director[first_director] = 1
 
         if(len(director_record.index) == 1):
             response_message['director'] = director_record.to_dict(orient='index')
@@ -215,8 +234,8 @@ class SpecificDirector(Resource):
     @api.response(400, 'Bad request. Incorrect syntax.')
     @api.response(404, 'Not found. Collection not found.')
     def get(self, director_id):
-        global analytics
-        analytics['specific director'] += 1
+        global analytics_api_call_count
+        analytics_api_call_count['specific director'] += 1
         if not directorDF.index.isin([director_id]).any():
             return {
                 'error': 'Not Found',
@@ -249,8 +268,8 @@ class Genres(Resource):
     @api.response(500, 'Internal Service Error.')
     def get(self):
         global genresDF
-        global analytics
-        analytics['genres'] += 1
+        global analytics_api_call_count
+        analytics_api_call_count['genres'] += 1
         genres_record = genresDF
         args = genre_parser.parse_args()
         genres_record, response_message, response_code = pagination(request, args, genres_record)
@@ -292,18 +311,71 @@ class IMDBScorePredictor(Resource):
     @api.response(404, 'Not found. Collections not found.')
     @api.response(500, 'Internal Service Error.')
     def get(self):
-        global analytics
-        analytics['score predictor'] += 1
+        global directorDF
+        global actorDF
+        global analytics_api_call_count
+
+        director_record = directorDF
+        actor_record    = actorDF
+        analytics_api_call_count['score predictor'] += 1
         args = imdb_score_parser.parse_args()
-        director_facebook_likes = args['director_facebook_likes']
-        actor_1_facebook_likes = args['actor_1_facebook_likes']
-        actor_2_facebook_likes = args['actor_2_facebook_likes']
-        actor_3_facebook_likes = args['actor_3_facebook_likes']
+
+        # budget
         budget = args['budget']
+
+        # DIRECTOR 
+        director = args['director_name'].lower().strip('\'').strip('\"')
+        q = 'director_name == \'' + director + '\''
+        director = director_record.query(q)
         
+        if director_record.empty:
+            return {
+                'error': 'Not Found',
+                'message': 'Director Not Found'
+            }, 404
+        director_likes = director['facebook_likes'].iloc[0]
+        
+        # ACTOR 1
+        actor1 = args['actor_1_name'].lower().strip('\'').strip('\"')
+        q = 'actor_name == \'' + actor1 + '\''
+        actor1 = actor_record.query(q)
+        if actor1.empty:
+            return {
+                'error': 'Not Found',
+                'message': 'Actor 1 Not Found'
+            }, 404
+        actor1_likes = actor1['facebook_likes'].iloc[0]        
+
+        # ACTOR 2
+        if 'actor_2_name' in args and args['actor_2_name'] is not None:
+            actor2 = args['actor_2_name'].lower().strip('\'').strip('\"')
+            q = 'actor_name == \'' + actor2 + '\''
+            actor2 = actor_record.query(q)
+            if actor2.empty:
+                return {
+                    'error': 'Not Found',
+                    'message': 'Actor 2 Not Found'
+                }, 404
+            actor2_likes = actor2['facebook_likes'].iloc[0]
+        else :
+            actor2_likes = actor_average
+
+        # ACTOR 3
+        if 'actor_3_name' in args and args['actor_3_name'] is not None:
+            actor3 = args['actor_3_name'].lower().strip('\'').strip('\"')
+            q = 'actor_name == \'' + actor3 + '\''
+            actor3 = actor_record.query(q)
+            if actor3.empty:
+                return {
+                    'error': 'Not Found',
+                    'message': 'Actor 3 Not Found'
+                }, 404
+            actor3_likes = actor3['facebook_likes'].iloc[0]
+        else :
+            actor3_likes = actor_average
 
         return {
-            'movie_prediction_score': predict_score(director_facebook_likes,actor_1_facebook_likes,actor_2_facebook_likes,actor_3_facebook_likes,budget)
+            'movie_prediction_score': predict_score(director_likes,actor1_likes,actor2_likes,actor3_likes,budget)[1:-1]
         }, 200
 
 # -- Keywords --
@@ -326,8 +398,8 @@ class Keywords(Resource):
     @api.response(500, 'Internal Service Error.')
     def get(self):
         global keywordsDF
-        global analytics
-        analytics['keywords'] += 1
+        global analytics_api_call_count
+        analytics_api_call_count['keywords'] += 1
         keywords_record = keywordsDF
         args = keyword_parser.parse_args()
         keywords_record, response_message, response_code = pagination(request, args, keywords_record)
@@ -375,11 +447,13 @@ class Movies(Resource):
     @api.response(500, 'Internal Service Error.')
     def get(self):
         global movieDF
-        global analytics
-        analytics['movies'] += 1
+        global analytics_api_call_count
+        global top_movie
+        analytics_api_call_count['movies'] += 1
         movie_record = movieDF
         expr = '(?=.*{})'
         args = movie_parser.parse_args()
+
 
         if 'name' in args and args['name'] is not None:
             words = args['name'].lower().strip('\'').strip('\"')
@@ -422,6 +496,12 @@ class Movies(Resource):
         elif response_code != 200:
             return response_message, response_code
 
+        first_movie = movie_record['title'].iloc[0]
+        if first_movie in top_movie:
+            top_movie[first_movie] += 1
+        else:
+            top_movie[first_movie] = 1
+
         if(len(movie_record.index) == 1):
             response_message['movie'] = movie_record.to_dict(orient='index')
         else :
@@ -443,8 +523,8 @@ class SpecificMovie(Resource):
     @api.response(404, 'Not found. Collection not found.')
     @api.response(500, 'Internal Service Error.')
     def get(self, movie_id):
-        global analytics
-        analytics['specific movie'] += 1
+        global analytics_api_call_count
+        analytics_api_call_count['specific movie'] += 1
         if not movieDF.index.isin([movie_id]).any():
             return {
                 'error': 'Not Found',
@@ -480,8 +560,21 @@ class Screenwriter(Resource):
     @api.response(500, 'Internal Service Error.')
     def get(self):
         global screenwriterDF
-        global analytics
-        analytics['screenwriters'] += 1
+        global analytics_api_call_count
+        analytics_api_call_count['screenwriters'] += 1
+
+        args = writer_parser.parse_args()
+        writer_record = screenwriterDF
+        if 'name' in args and args['name'] is not None:
+            writer_name = args['name'].lower().strip('\'').strip('\"')
+            writer_record = writer_record[writer_record['writer_name'].str.contains(writer_name) == True]
+
+            # OLD
+            # q = 'writer_name == \'' + writer_name + '\''
+            # writer_record = screenwriterDF.query(q)
+
+        writer_record, response = pagination(request, args, writer_record)
+        
 
         args = writer_parser.parse_args()
         writer_record = screenwriterDF
@@ -503,6 +596,13 @@ class Screenwriter(Resource):
         elif response_code != 200:
             return response_message, response_code
 
+        first_screenwriter = writer_record['writer_name'].iloc[0]
+        # print(first_screenwriter)
+        if first_screenwriter in top_screenwriter:
+            top_screenwriter[first_screenwriter] += 1
+        else:
+            top_screenwriter[first_screenwriter] = 1
+
         if(len(writer_record.index) == 1):
             response_message['writer'] = writer_record.to_dict(orient='index')
         else :
@@ -514,7 +614,7 @@ class Screenwriter(Resource):
 @api.route('/screenwriters/<int:screenwriter_id>', doc={
     "description": "Endpoint which gets a specific screenwriter and their corresponding information based on a unique id number."
 })
-class Screenwriter(Resource):
+class SpecificScreenwriter(Resource):
     @api.doc('get_specific_screenwriter')
     @api.response(200, 'Success. Collection entry retrieved.')
     @api.response(400, 'Bad request. Incorrect syntax.')
@@ -523,9 +623,11 @@ class Screenwriter(Resource):
     @api.response(404, 'Not found. Collection not found.')
     @api.response(500, 'Internal Service Error.')
     def get(self, screenwriter_id):
-        global analytics
-        analytics['specific screenwriter'] += 1
+        global analytics_api_call_count
+        global top_screenwriter
+        analytics_api_call_count['specific screenwriter'] += 1
         if not screenwriterDF.index.isin([screenwriter_id]).any():
+        
             return {
                 'error': 'Not Found',
                 'message': 'Collection was not found'
@@ -600,7 +702,6 @@ def pagination(request, args, record):
         if prevURL  is not None : prevURL = prevURL[:-1]
         if nextURL  is not None : nextURL = nextURL[:-1]
 
-
         return record, {
             'href'  : request.url,
             'offset': offset,
@@ -622,6 +723,82 @@ def pagination(request, args, record):
         }, 200
 
 
+
+@api.route('/analytics_top_actor')
+class TopActorAnalytics(Resource):
+    @api.doc('get_analytics_top_actor')
+    @api.response(200, 'Success. Collection entries retrieved.')
+    @api.response(400, 'Bad request. Incorrect syntax.')
+    @api.response(404, 'Not found. Collection not found.')
+    def get(self):
+        global top_actor
+        # print(top_actor)
+        # sorted(top_actor, key=numbermap.__getitem__)
+        response = { "href": "http://127.0.0.1:5000/analytics_top_actor",
+                    "results_shown": len(top_actor),
+                    "total_results": len(top_actor),
+                    "analytics_top_actor": ""
+                }
+        response['analytics_top_actor'] = top_actor
+        return response, 200
+
+
+@api.route('/analytics_top_movie')
+class TopMovieAnalytics(Resource):
+    @api.doc('get_analytics_top_movie')
+    @api.response(200, 'Success. Collection entries retrieved.')
+    @api.response(400, 'Bad request. Incorrect syntax.')
+    @api.response(404, 'Not found. Collection not found.')
+    def get(self):
+        global top_movie
+        # print(top_actor)
+        # sorted(top_actor, key=numbermap.__getitem__)
+        response = { "href": "http://127.0.0.1:5000/analytics_top_movie",
+                    "results_shown": len(top_movie),
+                    "total_results": len(top_movie),
+                    "analytics_top_movie": ""
+                }
+        response['analytics_top_movie'] = top_movie
+        return response, 200
+
+
+@api.route('/analytics_top_director')
+class TopMovieAnalytics(Resource):
+    @api.doc('get_analytics_top_director')
+    @api.response(200, 'Success. Collection entries retrieved.')
+    @api.response(400, 'Bad request. Incorrect syntax.')
+    @api.response(404, 'Not found. Collection not found.')
+    def get(self):
+        global top_director
+        # print(top_actor)
+        # sorted(top_actor, key=numbermap.__getitem__)
+        response = { "href": "http://127.0.0.1:5000/analytics_top_director",
+                    "results_shown": len(top_director),
+                    "total_results": len(top_director),
+                    "analytics_top_director": ""
+                }
+        response['analytics_top_director'] = top_director
+        return response, 200
+
+
+@api.route('/analytics_top_screenwriter')
+class TopScreenwriterAnalytics(Resource):
+    @api.doc('get_analytics_top_screenwriter')
+    @api.response(200, 'Success. Collection entries retrieved.')
+    @api.response(400, 'Bad request. Incorrect syntax.')
+    @api.response(404, 'Not found. Collection not found.')
+    def get(self):
+        global top_screenwriter
+        # print(top_actor)
+        # sorted(top_actor, key=numbermap.__getitem__)
+        response = { "href": "http://127.0.0.1:5000/analytics_top_director",
+                    "results_shown": len(top_screenwriter),
+                    "total_results": len(top_screenwriter),
+                    "analytics_top_screenwriter": ""
+                }
+        response['analytics_top_screenwriter'] = top_screenwriter
+        return response, 200
+
 # APP ROUTING FUNCTIONS
 @app.route('/application/home', methods=['GET'])
 def index():
@@ -630,39 +807,39 @@ def index():
                                          actors=list(actorDF['actor_name']),
                                          genres=list(genresDF['genres']))
 
-@app.route('/imdbscoreprediction_ui', methods=['GET'])
+@app.route('/application/imdbscoreprediction_ui', methods=['GET'])
 def imdbscoreprediction_ui():
 
     return render_template('imdbscoreprediction.html', directors=list(directorDF['director_name']),
                                          actors=list(actorDF['actor_name']),
                                          genres=list(genresDF['genres']))
 
-@app.route('/genres_ui', methods=['GET'])
+@app.route('/application/genres_ui', methods=['GET'])
 def genres_ui():
 
     return render_template('genres.html', genres=list(genresDF['genres']))
 
-@app.route('/directors_ui', methods=['GET'])
+@app.route('/application/directors_ui', methods=['GET'])
 def directors_ui():
 
     return render_template('directors.html')
 
-@app.route('/actors_ui', methods=['GET'])
+@app.route('/application/actors_ui', methods=['GET'])
 def actors_ui():
 
     return render_template('actors.html')
 
-@app.route('/keywords_ui', methods=['GET'])
+@app.route('/application/keywords_ui', methods=['GET'])
 def keywords_ui():
 
     return render_template('keywords.html')
 
-@app.route('/movies_ui', methods=['GET'])
+@app.route('/application/movies_ui', methods=['GET'])
 def movies_ui():
 
     return render_template('movies.html')
 
-@app.route('/screenwriters_ui', methods=['GET'])
+@app.route('/application/screenwriters_ui', methods=['GET'])
 def screenwriters_ui():
 
     return render_template('screenwriters.html')
