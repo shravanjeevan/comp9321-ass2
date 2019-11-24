@@ -4,7 +4,9 @@ from urllib.parse import quote_plus as urlencode
 import json
 from preprocess import process_dataset2
 from machinelearning import predict_score
-
+import pandas as pd
+import numpy as np
+import os
 # TODO Things that must be done before submission
 # - API:
 #   1. Authentication
@@ -19,22 +21,42 @@ from machinelearning import predict_score
 app = Flask(__name__)
 
 api = Api(app, title='COMP9321 Assignment 2 - API Documentation', validate=True)
+dirname = os.path.dirname(__file__)
+analytics_path = os.path.join(dirname, 'analytics.csv')
+
+def updateCSV(apiUsage):
+    df = pd.DataFrame.from_dict(apiUsage)
+    # print(df)
+    df.to_csv(analytics_path, index=False)
+    
+def loadCSV():
+    analytics_api_call_count = pd.read_csv(analytics_path)
+    analytics_api_call_count['actors'] += 1
+   
+    updateCSV(analytics_api_call_count)
+    return  analytics_api_call_count.iloc[0].to_dict()
 
 # GLOBAL VARIABLES
 actor_average, directorDF, screenwriterDF, actorDF, keywordsDF, genresDF, movieDF = process_dataset2()
-analytics_api_call_count = {
-    'actors': 0,
-    'specific actor': 0,
-    'directors': 0,
-    'specific director': 0,
-    'screenwriters': 0,
-    'specific screenwriter': 0,
-    'movies': 0,
-    'specific movie': 0,
-    'keywords': 0,
-    'genres': 0,
-    'score predictor': 0
-}
+analytics_api_call_count = loadCSV()
+   
+# {
+#     'actors': 0,
+#     'specific actor': 0,
+#     'directors': 0,
+#     'specific director': 0,
+#     'screenwriters': 0,
+#     'specific screenwriter': 0,
+#     'movies': 0,
+#     'specific movie': 0,
+#     'keywords': 0,
+#     'genres': 0,
+#     'score predictor': 0
+# }
+
+
+
+
 
 top_actor = dict()
 top_movie = dict()
@@ -577,9 +599,9 @@ def pagination(request, args, record):
 # movie_parser
 imdb_score_parser = reqparse.RequestParser()
 imdb_score_parser.add_argument('director_name', type=str, help="Director Name", required=True)
-imdb_score_parser.add_argument('actor_1_name', type=str, help="Name of Actor (required)", required=True)
-imdb_score_parser.add_argument('actor_2_name', type=str, help="Name of Actor (optional)", required=False)
-imdb_score_parser.add_argument('actor_3_name', type=str, help="Name of Actor (optional)", required=False)
+imdb_score_parser.add_argument('actor_1_name', type=str, help="Name of Actor", required=True)
+imdb_score_parser.add_argument('actor_2_name', type=str, help="Name of Actor", required=False)
+imdb_score_parser.add_argument('actor_3_name', type=str, help="Name of Actor", required=False)
 imdb_score_parser.add_argument('budget', type=int, help="Budget", required=True)
 
 @api.route('/imdb_score_prediction')
@@ -594,7 +616,6 @@ class IMDBScorePredictor(Resource):
         global directorDF
         global actorDF
         global analytics_api_call_count
-
 
         director_record = directorDF
         actor_record    = actorDF
