@@ -17,7 +17,8 @@ from machinelearning import predict_score
 # APPLICATION AND API SETUP
 
 app = Flask(__name__)
-api = Api(app)
+
+api = Api(app, title='COMP9321 Assignment 2 - API Documentation', validate=True)
 
 # GLOBAL VARIABLES
 directorDF, screenwriterDF, actorDF, keywordsDF, genresDF, movieDF = process_dataset2()
@@ -44,11 +45,25 @@ analytics = {
 # API INPUT MODELS
 # actors_model = api.model('ActorsModel', {
 #     'name': fields.String(
-#         description="Name of the actor queried"
+#         description="Name of the actor queried",
+#         required=False,
+#         example="Tom Hanks"
 #     ),
 #     'gender': fields.String(
 #         description="Actor gender",
-#         enum=["F", "M", "O"]
+#         required=False,
+#         enum=["F", "M", "O"],
+#         example="M"
+#     ),
+#     'offset': fields.Integer(
+#         description="Start",
+#         required="False",
+#         example="0"
+#     ),
+#     'limit': fields.Integer(
+#         description="Number of returned results",
+#         required=False,
+#         example="10"
 #     )
 # })
 
@@ -78,7 +93,7 @@ actors_parser.add_argument('gender', type=str, choices=('M', 'F', 'O'), help="Ac
 actors_parser.add_argument('offset', type=int, help="offset given")
 actors_parser.add_argument('limit', type=int, help="number of results to return")
 
-@api.route('/actors')
+@api.route('/actors', doc={"description" : "Actors 123"})
 class Actors(Resource):
     @api.doc('get_actors')
     @api.expect(actors_parser)
@@ -475,14 +490,15 @@ def pagination(request, args, record):
             if args[key] is not None:
                 querystring += key + "=" + urlencode(str(args[key])) + "&"
         baseURL     = request.base_url + "?" + querystring
-        firstURL    = baseURL
+        print(baseURL)
+        firstURL    = baseURL + 'limit=' + str(limit) + "&"
         lastURL     = baseURL
         prevURL     = baseURL
         nextURL     = baseURL
 
         if offset - limit > 0: # if there's nothing previous then it's just the original url
             prevURL += 'offset=' + str((offset - limit)) + '&limit=' + str(limit) + "&"
-        elif offset - limit == 0:
+        else:
             prevURL += 'limit=' + str(limit) + "&"
 
         if offset + limit < qsize:
@@ -492,7 +508,7 @@ def pagination(request, args, record):
                 lastURL = nextURL
             else:
                 nextURL += 'limit=' + str(limit) + "&"
-                lastURL += 'offset=' + str((qsize - limit)) + '&limit=' + str(limit) + "&"
+                lastURL += 'offset=' + str((qsize - (qsize % limit))) + '&limit=' + str(limit) + "&"
         else:
             nextURL = None
             lastURL = None
@@ -527,14 +543,14 @@ def pagination(request, args, record):
 # movie_parser
 imdb_score_parser = reqparse.RequestParser()
 # imdb_score_parser.add_argument('num_critic_for_reviews', type=int, help="Number of Critic Reviews")
-imdb_score_parser.add_argument('director_facebook_likes', type=int, help="Number of Facebook Likes for Director")
-imdb_score_parser.add_argument('actor_1_facebook_likes', type=int, help="Number of Facebook likes for Actor 1")
-imdb_score_parser.add_argument('actor_2_facebook_likes', type=int, help="Number of Facebook likes for Actor 2")
+imdb_score_parser.add_argument('director_facebook_likes', type=int, help="Number of Facebook Likes for Director", required=True)
+imdb_score_parser.add_argument('actor_1_facebook_likes', type=int, help="Number of Facebook likes for Actor 1", required=True)
+imdb_score_parser.add_argument('actor_2_facebook_likes', type=int, help="Number of Facebook likes for Actor 2", required=True)
 # imdb_score_parser.add_argument('num_voted_users', type=int, help="Number of votes by users")
-imdb_score_parser.add_argument('cast_total_facebook_likes', type=int, help="Total number of Facebook likes for cast")
+imdb_score_parser.add_argument('actor_3_facebook_likes', type=int, help="Number of Facebook likes for Actor 3", required=True)
 # imdb_score_parser.add_argument('num_user_for_reviews', type=int, , help="")
-imdb_score_parser.add_argument('budget', type=int, help="Budget")
-imdb_score_parser.add_argument('movie_facebook_likes', type=int, help="Number of Facebook likes on the movie")
+imdb_score_parser.add_argument('budget', type=int, help="Budget", required=True)
+# imdb_score_parser.add_argument('movie_facebook_likes', type=int, help="Number of Facebook likes on the movie", required=True)
 
 @api.route('/imdb_score_prediction')
 class IMDBScorePredictor(Resource):
@@ -549,13 +565,15 @@ class IMDBScorePredictor(Resource):
         args = imdb_score_parser.parse_args()
         director_facebook_likes = args['director_facebook_likes']
         actor_1_facebook_likes = args['actor_1_facebook_likes']
-        cast_total_facebook_likes = args['cast_total_facebook_likes']
-        budget = args['budget']
         actor_2_facebook_likes = args['actor_2_facebook_likes']
-        movie_facebook_likes = args['movie_facebook_likes']
+        actor_3_facebook_likes = args['actor_3_facebook_likes']
+        # cast_total_facebook_likes = args['cast_total_facebook_likes']
+        budget = args['budget']
+        
+        # movie_facebook_likes = args['movie_facebook_likes']
 
         return {
-            'movie_prediction_score': predict_score(director_facebook_likes,actor_1_facebook_likes,cast_total_facebook_likes,budget,actor_2_facebook_likes,movie_facebook_likes)
+            'movie_prediction_score': predict_score(director_facebook_likes,actor_1_facebook_likes,actor_2_facebook_likes,actor_3_facebook_likes,budget)
         }, 200
 
 
@@ -630,7 +648,7 @@ class Analytics(Resource):
 #             }, 200
 
 # APP ROUTING FUNCTIONS
-@app.route('/home', methods=['GET'])
+@app.route('/application/home', methods=['GET'])
 def index():
 
     return render_template('index.html', directors=list(directorDF['director_name']),

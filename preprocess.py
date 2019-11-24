@@ -13,7 +13,6 @@ def process_dataset_forML(df): # USE THIS ONE FOR ML MAYBE
         'color',
         'director_name',
         'duration',
-        'actor_3_facebook_likes',
         'actor_2_name',
         'gross',
         'genres',
@@ -30,9 +29,19 @@ def process_dataset_forML(df): # USE THIS ONE FOR ML MAYBE
         'aspect_ratio',
         'num_critic_for_reviews',
         'num_voted_users',
-        'num_user_for_reviews'
+        'num_user_for_reviews',
+        'cast_total_facebook_likes',
+        'movie_facebook_likes'
     ]
+
     df = df.drop(columns_to_drop, axis=1)
+
+    df = df[['director_facebook_likes', 
+            'actor_1_facebook_likes', 
+            'actor_2_facebook_likes', 
+            'actor_3_facebook_likes',  
+            'budget',
+            'imdb_score']]
     df = df.replace(0,float("NaN"))
     df = df.dropna(axis=0, how='any')
     df = df.astype(int)
@@ -246,3 +255,4 @@ if __name__ == '__main__':
     # print("===================== FIRST 3 RESULTS ===================")
     # print(result.head(3).to_string())
     # print(moviesbykeywords)
+    print(process_dataset_forML(pd.read_csv("datasets/movie_metadata.csv")).columns)
