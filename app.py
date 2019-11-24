@@ -8,6 +8,10 @@ import pandas as pd
 import numpy as np
 import os
 import requests as req
+import string
+import secrets
+from datetime import datetime
+
 # TODO Things that must be done before submission
 # - API:
 #   1. Authentication
@@ -18,8 +22,12 @@ import requests as req
 #   6. Make sure all the params are labelled in the docs with a description
 
 # APPLICATION AND API SETUP
+token_dict = {}
+user_dict = {}
 
 app = Flask(__name__)
+
+ADMIN_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9"
 
 api = Api(app, title='COMP9321 Assignment 2 - API Documentation', validate=True)
 dirname = os.path.dirname(__file__)
@@ -47,7 +55,7 @@ def loadCSV_horizontal(filename):
 
 #verify token
 def valid_token(token):
-    if token == 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9':
+    if token in token_dict:
         return True
     else:
         return False
@@ -80,13 +88,26 @@ class Register(Resource):
     @api.expect(register_parser)
     @api.response(200, 'Success. registered successfully.')
     @api.response(400, 'Failed, missing args')
+    @api.response(409, 'Failed, this user already exists')
     def get(self):
-        args = writer_parser.parse_args()
-        if "username" not in args or "password" not in args:
+        args = register_parser.parse_args()
+        if "username" not in args or "password" not in args or args['username'] is None or args['password'] is None:
             return {
                 'error': 'missing args',
                 'message': 'Failed, missing args'
             }, 400
+
+        username = args['username'].lower().strip('\'').strip('\"')
+        password = args['password'].lower().strip('\'').strip('\"')
+
+        print("username: ",username," password: ", password)
+        if username in user_dict:
+            return {
+                       'error': 'Failed',
+                       'message': 'Failed, this user exists'
+                   }, 409
+
+        user_dict[username] = password
         return {
                 'message': 'Success. registered successfully.'
             }, 200
@@ -102,10 +123,39 @@ class Login(Resource):
     @api.doc('login_account')
     @api.expect(register_parser)
     @api.response(200, 'Success. logged in successfully')
+    @api.response(400, 'Failed, missing args')
+    @api.response(401, 'Unauthorised access to collection.')
+    @api.response(404, 'Failed, this user does not exist')
     def get(self):
+        args = login_parser.parse_args()
+        if "username" not in args or "password" not in args or args['username'] is None or args['password'] is None:
+            return {
+                       'error': 'missing args',
+                       'message': 'Failed, missing args'
+                   }, 400
+
+        username = args['username'].lower().strip('\'').strip('\"')
+        password = args['password'].lower().strip('\'').strip('\"')
+        print("username: ", username, " password: ", password)
+        print("user_dict = ", user_dict)
+        if username not in user_dict:
+            return {
+                       'error': 'Failed',
+                       'message': 'Failed, this user does not exist'
+                   }, 404
+        if user_dict[username] != password:
+            return {
+                       'error': 'Failed',
+                       'message': 'Failed, this password does not match the users password'
+                   }, 401
+
+        alphabet = string.ascii_letters + string.digits
+        token = ''.join(secrets.choice(alphabet) for i in range(36))
+        token_dict[token] = True
+        print("token_dict: ", token_dict)
         return {
                 'message': 'Success. logged in successfully',
-                'token' : 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9'
+                'token' : token
             }, 200
 
 # -- Actors --
@@ -325,6 +375,7 @@ class SpecificDirector(Resource):
     @api.doc('get_specific_director')
     @api.expect(spec_dir_parser)
     @api.response(200, 'Success. Collection entries retrieved.')
+    @api.response(401, 'Unauthorised. Invalid token.')
     @api.response(400, 'Bad request. Incorrect syntax.')
     @api.response(404, 'Not found. Collection not found.')
     def get(self, director_id):
@@ -901,6 +952,7 @@ class TopActorAnalytics(Resource):
     @api.expect(top_act_parser)
     @api.response(200, 'Success. Collection entries retrieved.')
     @api.response(400, 'Bad request. Incorrect syntax.')
+    @api.response(401, 'Unauthorised. Invalid token.')
     @api.response(404, 'Not found. Collection not found.')
     def get(self):
         global top_actor
@@ -929,6 +981,7 @@ class TopMovieAnalytics(Resource):
     @api.expect(top_movAnal_parser)
     @api.response(200, 'Success. Collection entries retrieved.')
     @api.response(400, 'Bad request. Incorrect syntax.')
+    @api.response(401, 'Unauthorised. Invalid token.')
     @api.response(404, 'Not found. Collection not found.')
     def get(self):
         global top_movie
@@ -957,6 +1010,7 @@ class TopMovieAnalytics(Resource):
     @api.expect(top_dir_parser)
     @api.response(200, 'Success. Collection entries retrieved.')
     @api.response(400, 'Bad request. Incorrect syntax.')
+    @api.response(401, 'Unauthorised. Invalid token.')
     @api.response(404, 'Not found. Collection not found.')
     def get(self):
         global top_director
@@ -986,6 +1040,7 @@ class TopScreenwriterAnalytics(Resource):
     @api.expect(top_screen_parser)
     @api.response(200, 'Success. Collection entries retrieved.')
     @api.response(400, 'Bad request. Incorrect syntax.')
+    @api.response(401, 'Unauthorised. Invalid token.')
     @api.response(404, 'Not found. Collection not found.')
     def get(self):
         global top_screenwriter
@@ -1022,12 +1077,13 @@ def imdbscoreprediction_ui():
 
 @app.route('/application/genres_ui', methods=['GET', 'POST'])
 def genres_ui():
+    global ADMIN_TOKEN
 
     if request.method == 'GET':
         return render_template('genres.html')
     elif request.method == 'POST':
         # Get perform API call
-        url = str(request.url_root) + 'genres'
+        url = str(request.url_root) + 'genres'+'?token='+ADMIN_TOKEN
         result = req.get(url).json()
         return render_template('genres.html', genres_dict=result)
 
@@ -1041,10 +1097,19 @@ def actors_ui():
 
     return render_template('actors.html')
 
-@app.route('/application/keywords_ui', methods=['GET'])
+@app.route('/application/keywords_ui', methods=['GET','POST'])
 def keywords_ui():
-
-    return render_template('keywords.html')
+    global ADMIN_TOKEN
+    
+    if request.method == 'GET':
+        return render_template('keywords.html')
+    elif request.method == 'POST':
+        # Get perform API call
+        url = str(request.url_root) + 'keywords'+'?token='+ADMIN_TOKEN
+        result = req.get(url).json()
+        
+        return render_template('keywords.html', keywords_dict=result)
+    
 
 @app.route('/application/movies_ui', methods=['GET'])
 def movies_ui():
