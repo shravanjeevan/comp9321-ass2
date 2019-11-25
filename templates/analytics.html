@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+{% block body %}
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+  <a class="navbar-brand" href="#"></a>
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+  <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
+    <div class="navbar-nav">
+      <a class="nav-item nav-link" href="/application/home">Home</a>
+      <a class="nav-item nav-link" href="/application/actors_ui">Actors</a>
+      <a class="nav-item nav-link" href="/application/directors_ui">Directors</a>
+      <a class="nav-item nav-link" href="/application/genres_ui">Genres</a>
+      <a class="nav-item nav-link" href="/application/keywords_ui">Keywords</a>
+      <a class="nav-item nav-link" href="/application/movies_ui">Movies</a>
+      <a class="nav-item nav-link" href="/application/screenwriters_ui">Screenwriters</a>
+      <a class="nav-item nav-link" href="/application/imdbscoreprediction_ui">IMDB Score Prediction</a>
+    </div>
+  </div>
+</nav>
+<br> </br>
+<center>
+  <h1> API Analytics </h1>
+  <pr> Stats for how the API has been used.
+</center>
+
+<br></br>
+
+Here are the number of hits that each API endpoint has received.
+<p>
+{% for item, val in analytics.items() %}
+  <p>
+  <b>{{item}}:</b> {{val[0]}}
+
+{% endfor %}
+
+{% endblock %}

@@ -30,7 +30,7 @@ api = Api(app, title='COMP9321 Assignment 2 - API Documentation', validate=True)
 dirname = os.path.dirname(__file__)
 analytics_path = os.path.join(dirname, 'analytics.csv')
 
-def updateCSV_vertical(apiUsage): 
+def updateCSV_vertical(apiUsage):
     df = pd.DataFrame.from_dict(apiUsage, orient='columns')
     df.to_csv(analytics_path, index=False)
 
@@ -862,7 +862,7 @@ class SpecificScreenwriter(Resource):
 
 # Handles query pagination
 def pagination(request, args, record):
-    
+
     offset = 0
     limit = 20
     if 'offset' in args and args['offset'] is not None and args['offset'] > 0:
@@ -1069,7 +1069,7 @@ def index():
 def imdbscoreprediction_ui():
     form = request.form
     if request.method == 'POST':
-        url = str(request.url_root) + 'imdb_score_prediction'+'?token='+ADMIN_TOKEN 
+        url = str(request.url_root) + 'imdb_score_prediction'+'?token='+ADMIN_TOKEN
         if 'url' in form and form['url'] is not None:
             url = form['url']
         else :
@@ -1093,14 +1093,14 @@ def imdbscoreprediction_ui():
                             input_actors.append(form[key])
 
             print(url)
-        result = req.get(url).json()    
+        result = req.get(url).json()
         print(result)
         return render_template('imdbscoreprediction.html', directors=list(directorDF['director_name']),
                                          actors=list(actorDF['actor_name']),
-                                         genres=list(genresDF['genres']), 
-                                         score=result, 
-                                         input_director=input_director, 
-                                         input_actors=', '.join(input_actors), 
+                                         genres=list(genresDF['genres']),
+                                         score=result,
+                                         input_director=input_director,
+                                         input_actors=', '.join(input_actors),
                                          input_budget=input_budget)
     return render_template('imdbscoreprediction.html', directors=list(directorDF['director_name']),
                                          actors=list(actorDF['actor_name']),
@@ -1130,7 +1130,7 @@ def directors_ui():
         elif 'url' in form and form['url'] is not None:
             url = form['url']
         else :
-            url = str(request.url_root) + 'directors'+'?token='+ADMIN_TOKEN 
+            url = str(request.url_root) + 'directors'+'?token='+ADMIN_TOKEN
         result = req.get(url).json()
         return render_template('directors.html', directors_dict=result, director_name=director_name)
 
@@ -1143,7 +1143,7 @@ def actors_ui():
 
     actor_name = ""
     if request.method == 'POST':
-        url = str(request.url_root) + 'actors'+'?token='+ADMIN_TOKEN 
+        url = str(request.url_root) + 'actors'+'?token='+ADMIN_TOKEN
         if 'url' in form and form['url'] is not None:
             url = form['url']
         else :
@@ -1151,9 +1151,9 @@ def actors_ui():
                 url += '&name=' + form['name']
                 actor_name = form['name']
             if 'gender' in form and form['gender'] is not None and form['gender'] != "":
-                url += '&gender=' + form['gender'] 
+                url += '&gender=' + form['gender']
         print(url)
-        
+
         result = req.get(url).json()
         return render_template('actors.html', actors_dict=result, actor_name=actor_name)
 
@@ -1173,7 +1173,7 @@ def keywords_ui():
         else :
             url = str(request.url_root) + 'keywords'+'?token='+ADMIN_TOKEN
         result = req.get(url).json()
-        
+
         return render_template('keywords.html', keywords_dict=result)
 
 
@@ -1195,11 +1195,21 @@ def register_ui():
 
     if 'password' in form and form['password'] is not None:
         files['password'] = form['password']
-   
+
     url = str(request.url_root) + 'register'
     result = req.post(url, data=files).json()
     return render_template('dashboard.html', register_result=result)
-      
+
+
+@app.route('/application/analytics_ui', methods=['GET'])
+def analytics_ui():
+
+# analytics_api_call_count = loadCSV_vertical('analytics.csv')
+# top_actor = loadCSV_horizontal('top_actor.csv')
+# top_movie = loadCSV_horizontal('top_movie.csv')
+# top_director = loadCSV_horizontal('top_director.csv')
+# top_screenwriter = loadCSV_horizontal('top_screenwriter.csv')
+    return render_template('analytics.html', analytics=analytics_api_call_count)
 
 @app.route('/application/login_ui', methods=['GET', 'POST'])
 def login_ui():
@@ -1218,11 +1228,11 @@ def login_ui():
 
     if 'password' in form and form['password'] is not None:
         files['password'] = form['password']
-   
+
     url = str(request.url_root) + 'login'
     result = req.post(url, data=files).json()
     return render_template('dashboard.html', login_result=result)
-    
+
 
 @app.route('/application/movies_ui', methods=['GET', 'POST'])
 def movies_ui():
@@ -1230,7 +1240,7 @@ def movies_ui():
     print(form)
     movie_name = ""
     if request.method == 'POST':
-        url = str(request.url_root) + 'movies'+'?token='+ADMIN_TOKEN 
+        url = str(request.url_root) + 'movies'+'?token='+ADMIN_TOKEN
         if 'url' in form and form['url'] is not None:
             url = form['url']
         else :
@@ -1244,7 +1254,7 @@ def movies_ui():
                         if key == 'name':
                             movie_name = form['name']
             print(url)
-        result = req.get(url).json()    
+        result = req.get(url).json()
         return render_template('movies.html', directors=list(directorDF['director_name']),
                                          actors=list(actorDF['actor_name']),
                                          genres=list(genresDF['genres']),
@@ -1274,7 +1284,7 @@ def screenwriters_ui():
         elif 'url' in form and form['url'] is not None:
             url = form['url']
         else :
-            url = str(request.url_root) + 'screenwriters'+'?token='+ADMIN_TOKEN 
+            url = str(request.url_root) + 'screenwriters'+'?token='+ADMIN_TOKEN
         result = req.get(url).json()
         return render_template('screenwriters.html', screenwriters_dict=result, screenwriter_name=screenwriter_name)
 
