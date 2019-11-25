@@ -24,10 +24,17 @@
   <h1> Screenwriters </h1>
   <pr> Press button below to get the list of screenwriters.
   <br> </br>
-  <form action="/application/screenwriters_ui" method="post">
-  Screenwriter Name : </name><input type='text' name='name'> 
-  <button type="submit" class="btn btn-primary">Get Screenwriters</button>
-  </form>
+  <div class="row justify-content-center">
+    <div class="col-4">
+      <form action="/application/screenwriters_ui" method="post">
+        <label for="screenwriter_name">Screenwriter Name :</label>
+        <input class="form-control" type='text' name='name' id="screenwriter_name" placeholder="Enter screenwriter name"> 
+        <br />
+        <button type="submit" class="btn btn-primary">Get Screenwriters</button>
+      </form>
+
+    </div>
+  </div>
 </center>
   
   <br/>
@@ -38,26 +45,32 @@
       <div class="row">
           <div class="col">
             {% if screenwriters_dict['prev'] is defined and screenwriters_dict['next'] is defined %}
-              {%if screenwriters_dict['prev']['href'] != None%}
-              <span>
-                  <form action="/application/screenwriters_ui" method="post">
-                    <input type='hidden' name='url' value={{screenwriters_dict['prev']['href']}} >
-                    <button type="submit" class="btn btn-primary">Previous</button>
-                  </form>
-              </span>
-                {% endif %}
-                {%if screenwriters_dict['next']['href'] != None%}
-            
-                <span>
-                  <form action="/application/screenwriters_ui" method="post">
-                    <input type='hidden' name='url' value={{screenwriters_dict['next']['href']}} >
-                    <button type="submit" class="btn btn-primary">Next</button>
-                  </form>              
-              </span>
-                {% endif %}
+            <div class="row justify-content-center">
+              <div class="col-4">
+                <form action="/application/screenwriters_ui" method="post">
+                  <input type='hidden' name='url' value="{{screenwriters_dict['prev']['href']}}" >
+                  {% if screenwriters_dict['prev']['href'] == None %}
+                  <button type="submit" class="btn btn-primary" disabled>Previous</button>
+                  {% else %}
+                  <button type="submit" class="btn btn-primary">Previous</button>
+                  {% endif %}
+                </form>
+              </div>
+              <div class="col-4">
+                <form action="/application/screenwriters_ui" method="post">
+                  <input type='hidden' name='url' value="{{screenwriters_dict['next']['href']}}" >
+                  {% if screenwriters_dict['next']['href'] == None %}
+                  <button type="submit" class="btn btn-primary" disabled>Next</button>
+                  {% else %}
+                  <button type="submit" class="btn btn-primary">Next</button>
+                  {% endif %}
+                </form>              
+              </div>
+            </div>
             {% endif %}
           </div>
         </div>
+        <br />
         <ul class="list-group">
           {% for key in screenwriters_dict['writers'] %}
           <li class="list-group-item">{{screenwriters_dict['writers'][key]['writer_name']}}</li>  

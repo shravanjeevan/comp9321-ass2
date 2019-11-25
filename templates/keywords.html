@@ -37,35 +37,32 @@
     <p><b>Total Number of Keywords: </b>{{keywords_dict['total_results']}}</p>
     <div class="row">
         <div class="col">
+          {% if keywords_dict['prev'] is defined and keywords_dict['next'] is defined %}
           <div class="row justify-content-center">
             <div class="col-4">
-
-              {% if keywords_dict['prev'] is defined and keywords_dict['next'] is defined %}
-               {%if keywords_dict['prev']['href'] != None%}
-                
-                  
-                    <form action="/application/keywords_ui" method="post">
-                      <input type='hidden' name='url' value="{{keywords_dict['prev']['href']}}" >
-                      <button type="submit" class="btn btn-primary">Previous</button>
-                    </form>
-                  
-                  {% endif %}
+              <form action="/application/keywords_ui" method="post">
+                <input type='hidden' name='url' value="{{keywords_dict['prev']['href']}}" >
+                {% if keywords_dict['prev']['href'] == None %}
+                <button type="submit" class="btn btn-primary" disabled>Previous</button>
+                {% else %}
+                <button type="submit" class="btn btn-primary">Previous</button>
+                {% endif %}
+              </form> 
             </div>
             <div class="col-4">
-              {%if keywords_dict['next']['href'] != None%}
-            
-                <form action="/application/keywords_ui" method="post">
-                  <input type='hidden' name='url' value="{{keywords_dict['next']['href']}}" >
+              <form action="/application/keywords_ui" method="post">
+                <input type='hidden' name='url' value="{{keywords_dict['next']['href']}}" >
+                {% if keywords_dict['next']['href'] == None %}
+                  <button type="submit" class="btn btn-primary" disabled>Next</button>
+                {% else %}
                   <button type="submit" class="btn btn-primary">Next</button>
+                {% endif %}
                 </form>              
             
-            {% endif %}
-  
-            {% endif %}
-
+              </div>
+              
             </div>
-    
-            </div>
+            {% endif %}
           </div>
         </div>
       </div>
