@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+{% block body %}
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <a class="navbar-brand" href="#"></a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
+        <div class="navbar-nav">
+        <a class="nav-item nav-link" href="/application/home">Home</a>
+        <a class="nav-item nav-link" href="/application/actors_ui">Actors</a>
+        <a class="nav-item nav-link" href="/application/directors_ui">Directors</a>
+        <a class="nav-item nav-link" href="/application/genres_ui">Genres</a>
+        <a class="nav-item nav-link" href="/application/keywords_ui">Keywords</a>
+        <a class="nav-item nav-link" href="/application/movies_ui">Movies</a>
+        <a class="nav-item nav-link active" href="/application/screenwriters_ui">Screenwriters<span class="sr-only">(current)</span></a>
+        <a class="nav-item nav-link" href="/application/imdbscoreprediction_ui">IMDB Score Prediction</a>
+        <a class="nav-item nav-link" href="/application/login_ui">Login</a>
+        <a class="nav-item nav-link" href="/application/register_ui">Register</a>
+        </div>
+    </div>
+</nav>
+<br />
+<center>
+    <h1> Register </h1>
+    <pr> Register a new account so you can access your unique API Token. </pr>
+    <form action="/application/screenwriters_ui" method="post" autocomplete="off">
+        <div class="form-group">
+            <label for="username">New Username <span style="color: red">*</span>  : </label>
+            <input type="text" id="username" name="username" required>
+
+        </div>
+        <div class="form-group">
+            <label for="password">Password <span style="color: red">*</span>  : </label>
+            <input class="form-control" type="password" id="pass" name="password" minlength="8" required>
+            <small>Password must be at least 8 characters in length.</small>
+
+        </div>
+        
+    </form>
+</center>
+
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+{% endblock %}
