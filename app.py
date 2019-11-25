@@ -1066,6 +1066,7 @@ def imdbscoreprediction_ui():
         if 'url' in form and form['url'] is not None:
             url = form['url']
         else :
+            input_actors = []
             for key in form:
                 if key in form.keys():
                     if len(form.getlist(key)) > 1 :
@@ -1076,12 +1077,24 @@ def imdbscoreprediction_ui():
                             url += "&" + key + "=" + form[key]
                         else :
                             url += "&" + key + "=" + str(form[key])
+
+                        if key == 'budget':
+                            input_budget = form[key]
+                        elif key == 'director_name':
+                            input_director = form[key]
+                        elif key == 'actor_1_name' or key == 'actor_2_name' or key == 'actor_3_name':
+                            input_actors.append(form[key])
+
             print(url)
         result = req.get(url).json()    
         print(result)
         return render_template('imdbscoreprediction.html', directors=list(directorDF['director_name']),
                                          actors=list(actorDF['actor_name']),
-                                         genres=list(genresDF['genres']), score=result)
+                                         genres=list(genresDF['genres']), 
+                                         score=result, 
+                                         input_director=input_director, 
+                                         input_actors=', '.join(input_actors), 
+                                         input_budget=input_budget)
     return render_template('imdbscoreprediction.html', directors=list(directorDF['director_name']),
                                          actors=list(actorDF['actor_name']),
                                          genres=list(genresDF['genres']))

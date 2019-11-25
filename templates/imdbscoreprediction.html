@@ -22,65 +22,83 @@
 <br> </br>
 <center>
   <h1>IMDB Score Prediction</h1>
-</center>
-<br> </br>
-
-
-<form action="/application/imdbscoreprediction_ui" method="post">
-
-    <div class="form-group">
-        <label for="Director">Director</label>
-        <select name="director_name" class="form-control">
-            <option value=""></option>
-          {% for dir in directors %}
-           <option value="{{dir}}">{{dir}}</option>
-          {% endfor %}
-        </select>
-        <small id="directorHelp" class="form-text text-muted">Please select the director of your film</small>
+  <div class="row justify-content-center">
+    <div class="col-4">
+      <form action="/application/imdbscoreprediction_ui" method="post">
+        <div class="form-group">
+          <label for="Director">Director <span style="color: red">*</span> : </label>
+          <select name="director_name" class="custom-select" required>
+            <option default value="">Select director</option>
+            {% for dir in directors %}
+            <option value="{{dir}}">{{dir}}</option>
+            {% endfor %}
+          </select>
+          <small id="directorHelp" class="form-text text-muted">Please select the director of your film</small>
         </div>
-
-  <div class="form-group">
-  <label for="Actor1">Actor1</label>
-  <select name="actor_1_name" class="form-control">
-      <option value=""></option>
-    {% for dir in actors[1:] %}
-     <option value="{{dir}}">{{dir}}</option>
-    {% endfor %}
-  </select>
-  <small id="actor1Help" class="form-text text-muted">Please select an actor for your film</small>
+        <div class="form-group">
+          <label for="actor_1_name">First Actor Name <span style="color: red">*</span> : </label>
+          <select name="actor_1_name" class="custom-select" required>
+            <option default value="">Select first actor </option>
+            {% for dir in actors[1:] %}
+            <option value="{{dir}}">{{dir}}</option>
+            {% endfor %}
+          </select>
+          <small id="actor1Help" class="form-text text-muted">Please select the first actor for your film</small>
+        </div>
+        <div class="form-group">
+          <label for="actor_2_name">Second Actor Name : </label>
+          <select name="actor_2_name" class="custom-select">
+              <option default value="">Select second actor </option>
+            {% for dir in actors[1:] %}
+            <option value="{{dir}}">{{dir}}</option>
+            {% endfor %}
+          </select>
+          <small id="actor2Help" class="form-text text-muted">Please select the second actor for your film (optional)</small>
+        </div>
+        <div class="form-group">
+          <label for="actor_3_name">Third Actor Name : </label>
+          <select name="actor_3_name" class="custom-select">
+              <option default value="">Select third actor</option>
+            {% for dir in actors[1:] %}
+            <option value="{{dir}}">{{dir}}</option>
+            {% endfor %}
+          </select>
+          <small id="actor3Help" class="form-text text-muted">Please select the third actor for your film (optional)</small>
+        </div>
+      
+       <div class="form-group">
+        <label for="budget">Budget <span style="color: red">*</span> : </label>
+        <input type="number" name="budget" class="form-control" min=0 placeholder="Enter budget" required>
+        <small id="budgetHelp" class="form-text text-muted">Please enter the budget of your film</small>
+      </div>
+      
+      <button type="submit" class="btn btn-primary">Predict IMDB Score</button>
+    </form>
   </div>
-  <div class="form-group">
-  <label for="Actor2">Actor2</label>
-  <select name="actor_2_name" class="form-control">
-      <option value=""></option>
-    {% for dir in actors[1:] %}
-     <option value="{{dir}}">{{dir}}</option>
-    {% endfor %}
-  </select>
-  <small id="actor2Help" class="form-text text-muted">Please select an actor for your film</small>
-  </div>
-  <div class="form-group">
-  <label for="Actor3">Actor3</label>
-  <select name="actor_3_name" class="form-control">
-      <option value=""></option>
-    {% for dir in actors[1:] %}
-     <option value="{{dir}}">{{dir}}</option>
-    {% endfor %}
-  </select>
-  <small id="actor3Help" class="form-text text-muted">Please select an actor for your film</small>
-  </div>
-
- <div class="form-group">
-  <label for="budget">Budget</label>
-  <input type="number" name="budget" class="form-control" id="exampleInputEmail1" aria-describedby="budgetHelp">
-  <small id="budgetHelp" class="form-text text-muted">Please enter the budget of your film</small>
 </div>
+</center>
+<br/>
+<br/>
+<br/>
 
-  <center>
-  <button type="submit" class="btn btn-primary">Predict Score</button>
-  </center>
-</form>
-
-<h1>PREDICTED SCORE {{score['movie_prediction_score']}}</h1>
-
+{% if score is defined %}
+<div class="row justify-content-center">
+  <div class="col-6 text-center">
+    <div class="card">
+      <div class="card-header">Prediction Information</div>
+      <div class="card-body">
+        <p><b>For a movie directed by: </b>{{ input_director }}</p>
+        <p><b>Starring: </b>{{ input_actors }}</p>
+        <p><b>With a film budget of: </b>${{ input_budget }}</p>
+        <p><b>The predicted IMDB movie score is ... </b>{{score['movie_prediction_score']}} / 10</p>
+      </div>
+    </div>
+  </div>
+</div>
+{% endif %}
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
 {% endblock %}
