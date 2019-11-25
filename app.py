@@ -131,6 +131,9 @@ class Login(Resource):
     @api.response(404, 'Failed, this user does not exist')
     def post(self):
         args = login_parser.parse_args()
+        print("LOGIN")
+        print(args)
+        print(request)
         if "username" not in args or "password" not in args or args['username'] is None or args['password'] is None:
             return {
                        'error': 'missing args',
@@ -1134,7 +1137,7 @@ def directors_ui():
 @app.route('/application/actors_ui', methods=['GET', 'POST'])
 def actors_ui():
     form = request.form
-    print(form)
+    # print(form)
     if request.method == 'POST':
         url = str(request.url_root) + 'actors'+'?token='+ADMIN_TOKEN 
         if 'url' in form and form['url'] is not None:
@@ -1153,7 +1156,6 @@ def actors_ui():
 @app.route('/application/keywords_ui', methods=['GET','POST'])
 def keywords_ui():
     global ADMIN_TOKEN
-    print("ARRRGS")
     form = request.form
 
     if request.method == 'GET':
@@ -1167,6 +1169,53 @@ def keywords_ui():
         result = req.get(url).json()
         
         return render_template('keywords.html', keywords_dict=result)
+
+
+
+@app.route('/application/register_ui', methods=['GET', 'POST'])
+def register_ui():
+    global ADMIN_TOKEN
+
+    if request.method == 'GET':
+        return render_template('register.html')
+
+    form = request.form
+    files = {
+        'content-type': 'form-data'
+    }
+        # Get perform API call
+    if 'username' in form and form['username'] is not None:
+        files['username'] = form['username']
+
+    if 'password' in form and form['password'] is not None:
+        files['password'] = form['password']
+   
+    url = str(request.url_root) + 'register'
+    result = req.post(url, data=files).json()
+    return render_template('dashboard.html', register_result=result)
+      
+
+@app.route('/application/login_ui', methods=['GET', 'POST'])
+def login_ui():
+    global ADMIN_TOKEN
+
+    if request.method == 'GET':
+        return render_template('login.html')
+
+    form = request.form
+    files = {
+        'content-type': 'form-data'
+    }
+        # Get perform API call
+    if 'username' in form and form['username'] is not None:
+        files['username'] = form['username']
+
+    if 'password' in form and form['password'] is not None:
+        files['password'] = form['password']
+   
+    url = str(request.url_root) + 'login'
+    result = req.post(url, data=files).json()
+    return render_template('dashboard.html', login_result=result)
     
 
 @app.route('/application/movies_ui', methods=['GET', 'POST'])
