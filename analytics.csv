@@ -1,2 +1,6 @@
 actors,specific actor,directors,specific director,screenwriters,specific screenwriter,movies,specific movie,keywords,genres,score predictor
+<<<<<<< HEAD
 116,0,98,1,38,0,113,0,139,33,34
+=======
+91,0,93,1,43,0,109,0,140,34,27
+>>>>>>> 043cf446e0f85df4e2732b41d1917cdfc357ddde

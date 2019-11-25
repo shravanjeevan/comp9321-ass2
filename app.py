@@ -22,13 +22,10 @@ from datetime import datetime
 #   6. Make sure all the params are labelled in the docs with a description
 
 # APPLICATION AND API SETUP
-token_dict = {}
-user_dict = {}
+
 
 app = Flask(__name__)
 # GLOBAL VARIABLES
-ADMIN_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9"
-token_dict[ADMIN_TOKEN] = True
 api = Api(app, title='COMP9321 Assignment 2 - API Documentation', validate=True)
 dirname = os.path.dirname(__file__)
 analytics_path = os.path.join(dirname, 'analytics.csv')
@@ -42,7 +39,7 @@ def updateCSV_horizontal(apiUsage, filename):
     df = df.reset_index()
     df.to_csv(os.path.join(dirname, filename), index=False)
 
-    print(apiUsage)
+    # print(apiUsage)
 
 def loadCSV_vertical(filename):
     df = pd.read_csv(os.path.join(dirname, filename))
@@ -60,13 +57,18 @@ def valid_token(token):
     else:
         return False
 
-
+token_dict = loadCSV_horizontal('token_dict.csv')
+user_dict = loadCSV_horizontal('user_dict.csv')
 actor_average, directorDF, screenwriterDF, actorDF, keywordsDF, genresDF, movieDF = process_dataset2()
 analytics_api_call_count = loadCSV_vertical('analytics.csv')
 top_actor = loadCSV_horizontal('top_actor.csv')
 top_movie = loadCSV_horizontal('top_movie.csv')
 top_director = loadCSV_horizontal('top_director.csv')
 top_screenwriter = loadCSV_horizontal('top_screenwriter.csv')
+
+ADMIN_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9"
+token_dict[ADMIN_TOKEN] = True
+updateCSV_horizontal(token_dict, "token_dict.csv")
 # TODO Refer to these links for api creation:
 # https://flask-restplus.readthedocs.io/en/stable/quickstart.html
 # https://flask-restplus.readthedocs.io/en/stable/example.html
@@ -79,17 +81,17 @@ top_screenwriter = loadCSV_horizontal('top_screenwriter.csv')
 # -- Register --
 # register_parser
 register_parser = reqparse.RequestParser()
-register_parser.add_argument('username', type=str, help="Input your desired username")
-register_parser.add_argument('password', type=str, help="Input your desired password")
+register_parser.add_argument('username', type=str, location='form', help="Input your desired username")
+register_parser.add_argument('password', type=str, location='form', help="Input your desired password")
 
-@api.route('/register', methods=['GET'])
+@api.route('/register')
 class Register(Resource):
     @api.doc('register_account')
     @api.expect(register_parser)
     @api.response(200, 'Success. registered successfully.')
     @api.response(400, 'Failed, missing args')
     @api.response(409, 'Failed, this user already exists')
-    def get(self):
+    def post(self):
         args = register_parser.parse_args()
         if "username" not in args or "password" not in args or args['username'] is None or args['password'] is None:
             return {
@@ -108,6 +110,7 @@ class Register(Resource):
                    }, 409
 
         user_dict[username] = password
+        updateCSV_horizontal(user_dict, "user_dict.csv")
         return {
                 'message': 'Success. registered successfully.'
             }, 200
@@ -115,18 +118,18 @@ class Register(Resource):
 # -- Login --
 # login_parser
 login_parser = reqparse.RequestParser()
-login_parser.add_argument('username', type=str, help="Input your desired username")
-login_parser.add_argument('password', type=str, help="Input your desired password")
+login_parser.add_argument('username', type=str, location='form', help="Input your desired username")
+login_parser.add_argument('password', type=str, location='form', help="Inssput your desired password")
 
-@api.route('/login', methods=['GET'])
+@api.route('/login')
 class Login(Resource):
     @api.doc('login_account')
-    @api.expect(register_parser)
+    @api.expect(login_parser)
     @api.response(200, 'Success. logged in successfully')
     @api.response(400, 'Failed, missing args')
     @api.response(401, 'Unauthorised access to collection.')
     @api.response(404, 'Failed, this user does not exist')
-    def get(self):
+    def post(self):
         args = login_parser.parse_args()
         if "username" not in args or "password" not in args or args['username'] is None or args['password'] is None:
             return {
@@ -152,6 +155,7 @@ class Login(Resource):
         alphabet = string.ascii_letters + string.digits
         token = ''.join(secrets.choice(alphabet) for i in range(36))
         token_dict[token] = True
+        updateCSV_horizontal(token_dict, 'token_dict.csv')
         print("token_dict: ", token_dict)
         return {
                 'message': 'Success. logged in successfully',
