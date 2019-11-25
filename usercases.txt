@@ -1,24 +1,29 @@
-Use case:
-Movie producer/ (or company i.e. netflix) optimising for money:
-gathers directors and actors together to make a movie to make money
+Our data service aims to be a comprehensive source of information related
+to the film industry.
+These are some of the use cases for our data service:
 
-in a negotiation of how much an actor/ director should be paid. 
-(i.e. i want $3 million since this api predicts hiring me makes the movie $6 million extra)
+- As a film producer you can use our predictive models to optimise the money you
+spend by gathering directors and actors who have the highest probability to
+create a hit film
 
-you're a movie reviewer deciding which movies to see premier
-(i.e. i'm making 8 reviews in the next week, high scoring movies get the most youtube views so i'll watch these movies)
+- As a film critic, you can use our data service to decide which movies will be
+worth you time to see first depending on how their predicted quality (IMDB score)
 
-you're on the stock market investing in movie companies, seeing how upcoming movies do impacts the stock price
-(i.e. new disney movie is gonna be huge, buy stocks now)
+- As an investor, you can use our model to predict how upcoming movies are likely
+to fare in the box office and use this as a means to direct your capital to
+studios or production companies you are interested in investing in.
 
-you're a website that recommends movies to see premier. The imdb score predictor tells if it's worth seeing/
+- As a film fan website, you can get rich stats on the popularity of movies,
+actors and directors and use this as a base for visualisation or literature you
+may wish to write
 
-you're a gossip website that wants to show the top actor on their home screen
-(like a live Time person of the year but for actors)
+- Cinema owners can gain insights into how to prioritise films in their shows
+based on their predicted ratings and the popularity of the director, screenwriters
+and cast
 
-you're a movie theatre chain to increase sales you display the highest movie on your webpage
+- By deploying this application on your server, you also can see insights on how
+this API is called and gauge interest for certain directors, actors, movies,
+keywords and more!
 
-you're a server owner and you want to see how much your api is called 
-(how interest there is for a given actor/movie/genre over time etc.)
-
-
+The above use cases only scratch the surface on what customers of our data service
+have been able to do!

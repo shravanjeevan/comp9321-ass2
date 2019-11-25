@@ -25,8 +25,8 @@
   <pr> Press button below to get the list of directors.
   <br> </br>
   <div class="row justify-content-center">
-    <div class="col-4">
-        <form action="/application/directors_ui" method="post">
+    <div class="col-sm-6 col-md-5 col-lg-4 col-xl-4">
+        <form action="/application/directors_ui" method="post" autocomplete="off">
           <label for ="director_name">Director Name :</label>
           <input class="form-control" type='text' name='name' id="director_name" placeholder="Enter director name"> 
           <br/>
@@ -37,64 +37,74 @@
   
 </center>
   
-  <br/>
-  {% if directors_dict is defined %}
-  <!-- {{directors_dict}} -->
-  <div class="row justify-content-center">
-    <div class="col-4 text-center">
-      <p><b>Total Number of Directors: </b>{{directors_dict['total_results']}}</p>
-      <div class="row">
-          <div class="col">
-            {% if directors_dict['prev'] is defined and directors_dict['next'] is defined %}
-            <div class="row justify-content-center">
-              <div class="col-4">
-                <form action="/application/directors_ui" method="post">
-                  <input type='hidden' name='url' value="{{directors_dict['prev']['href']}}" >
-                  {% if directors_dict['prev']['href'] == None %}
-                  <button type="submit" class="btn btn-primary" disabled>Previous</button>
-                  {% else %}
-                  <button type="submit" class="btn btn-primary">Previous</button>
-                  {% endif %}
-                </form>
-              </div>
-              <div class="col-4">   
-                <form action="/application/directors_ui" method="post">
-                  <input type='hidden' name='url' value="{{directors_dict['next']['href']}}" >
-                  {% if directors_dict['next']['href'] == None %}
-                  <button type="submit" class="btn btn-primary" disabled>Next</button>
-                  {% else %}
-                  <button type="submit" class="btn btn-primary">Next</button>
-                  {% endif %}
-                </form>
-              </div>
-
+<br/>
+{% if directors_dict is defined and 'error' not in directors_dict %}
+<div class="row justify-content-center">
+  <div class="col-sm-6 col-md-5 col-lg-4 col-xl-4 text-center">
+    <p><b>Total Number of Directors: </b>{{directors_dict['total_results']}}</p>
+    <div class="row">
+        <div class="col">
+          {% if directors_dict['prev'] is defined and directors_dict['next'] is defined %}
+          <div class="row justify-content-center">
+            <div class="col-sm-6 col-md-5 col-lg-4 col-xl-4">
+              <form action="/application/directors_ui" method="post">
+                <input type='hidden' name='url' value="{{directors_dict['prev']['href']}}" >
+                {% if directors_dict['prev']['href'] == None %}
+                <button type="submit" class="btn btn-primary" disabled>Previous</button>
+                {% else %}
+                <button type="submit" class="btn btn-primary">Previous</button>
+                {% endif %}
+              </form>
             </div>
-            {% endif %}
+            <div class="col-sm-6 col-md-5 col-lg-4 col-xl-4">   
+              <form action="/application/directors_ui" method="post">
+                <input type='hidden' name='url' value="{{directors_dict['next']['href']}}" >
+                {% if directors_dict['next']['href'] == None %}
+                <button type="submit" class="btn btn-primary" disabled>Next</button>
+                {% else %}
+                <button type="submit" class="btn btn-primary">Next</button>
+                {% endif %}
+              </form>
+            </div>
+
           </div>
+          {% endif %}
         </div>
-        <br />
-        <ul class="list-group">
-          {% for key in directors_dict['directors'] %}
-          <li class="list-group-item">
-            <p><b class="text-center">
-              {{directors_dict['directors'][key]['director_name']}}
-            </b></p>
-            <small>likes : {{directors_dict['directors'][key]['facebook_likes']}}</small>
-          </li>
-          {% endfor %}
-          {% for key in directors_dict['director'] %}
-          <li class="list-group-item">
-            <p><b class="text-center">
-              {{directors_dict['director'][key]['director_name']}}
-            </b></p>
-            <small>likes : {{directors_dict['director'][key]['facebook_likes']}}</small>
-          </li>
+      </div>
+      <br />
+      <ul class="list-group">
+        {% for key in directors_dict['directors'] %}
+        <li class="list-group-item">
+          <p><b class="text-center">
+            {{directors_dict['directors'][key]['director_name']}}
+          </b></p>
+          <small>likes : {{directors_dict['directors'][key]['facebook_likes']}}</small>
+        </li>
         {% endfor %}
-        </ul>
-  
+        {% for key in directors_dict['director'] %}
+        <li class="list-group-item">
+          <p><b class="text-center">
+            {{directors_dict['director'][key]['director_name']}}
+          </b></p>
+          <small>likes : {{directors_dict['director'][key]['facebook_likes']}}</small>
+        </li>
+      {% endfor %}
+      </ul>
+
+  </div>
+</div>
+{% elif 'error' in directors_dict and directors_dict['error'] == 'Not Found' %}
+<div class="row justify-content-center">
+  <div class="col-sm-6 col-md-5 col-lg-4 col-xl-4">
+    <div class="card text-white bg-danger mb-3">
+      <div class="card-header">404 Not Found</div>
+      <div class="card-body">
+        <h5 class="card-title">{{ directors_dict['message'] }}</h5>
+        <p class="card-text">The director of name "{{ director_name }}" was not found in our records.</p>
+      </div>
     </div>
   </div>
-  
+</div>
 {% endif %}
 <br/>
 <br/>

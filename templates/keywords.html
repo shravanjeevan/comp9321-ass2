@@ -33,13 +33,13 @@
 <br/>
 {% if keywords_dict is defined %}
 <div class="row justify-content-center">
-  <div class="col-4 text-center">
+  <div class="col-sm-6 col-md-5 col-lg-4 col-xl-4 text-center">
     <p><b>Total Number of Keywords: </b>{{keywords_dict['total_results']}}</p>
     <div class="row">
         <div class="col">
           {% if keywords_dict['prev'] is defined and keywords_dict['next'] is defined %}
           <div class="row justify-content-center">
-            <div class="col-4">
+            <div class="col-sm-6 col-md-5 col-lg-4 col-xl-4">
               <form action="/application/keywords_ui" method="post">
                 <input type='hidden' name='url' value="{{keywords_dict['prev']['href']}}" >
                 {% if keywords_dict['prev']['href'] == None %}
@@ -49,7 +49,7 @@
                 {% endif %}
               </form> 
             </div>
-            <div class="col-4">
+            <div class="col-sm-6 col-md-5 col-lg-4 col-xl-4">
               <form action="/application/keywords_ui" method="post">
                 <input type='hidden' name='url' value="{{keywords_dict['next']['href']}}" >
                 {% if keywords_dict['next']['href'] == None %}
@@ -73,7 +73,7 @@
 </div>
 <br />
 <div class="row justify-content-center">
-    <div class="col-4 text-center">
+    <div class="col-sm-6 col-md-5 col-lg-4 col-xl-4 text-center">
 
       <ul class="list-group">
         {% for key in keywords_dict['keywords'] %}

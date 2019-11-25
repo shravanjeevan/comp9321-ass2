@@ -1122,15 +1122,17 @@ def genres_ui():
 def directors_ui():
     form = request.form
     # print(form)
+    director_name = ""
     if request.method == 'POST':
         if 'name' in form and form['name'] is not None and form['name'] != "":
             url = str(request.url_root) + 'directors'+'?token='+ADMIN_TOKEN + '&name=' + str(form['name'])
+            director_name = form['name']
         elif 'url' in form and form['url'] is not None:
             url = form['url']
         else :
             url = str(request.url_root) + 'directors'+'?token='+ADMIN_TOKEN 
         result = req.get(url).json()
-        return render_template('directors.html', directors_dict=result)
+        return render_template('directors.html', directors_dict=result, director_name=director_name)
 
     return render_template('directors.html')
 
@@ -1138,6 +1140,8 @@ def directors_ui():
 def actors_ui():
     form = request.form
     # print(form)
+
+    actor_name = ""
     if request.method == 'POST':
         url = str(request.url_root) + 'actors'+'?token='+ADMIN_TOKEN 
         if 'url' in form and form['url'] is not None:
@@ -1145,11 +1149,13 @@ def actors_ui():
         else :
             if 'name' in form and form['name'] is not None and form['name'] != "":
                 url += '&name=' + form['name']
+                actor_name = form['name']
             if 'gender' in form and form['gender'] is not None and form['gender'] != "":
                 url += '&gender=' + form['gender'] 
         print(url)
+        
         result = req.get(url).json()
-        return render_template('actors.html', actors_dict=result)
+        return render_template('actors.html', actors_dict=result, actor_name=actor_name)
 
     return render_template('actors.html')
 
@@ -1222,6 +1228,7 @@ def login_ui():
 def movies_ui():
     form = request.form
     print(form)
+    movie_name = ""
     if request.method == 'POST':
         url = str(request.url_root) + 'movies'+'?token='+ADMIN_TOKEN 
         if 'url' in form and form['url'] is not None:
@@ -1234,6 +1241,8 @@ def movies_ui():
                         url += "&" + key + "=" + separator.join(form.getlist(key))
                     elif form[key] is not None and form[key] != "":
                         url += "&" + key + "=" + form[key]
+                        if key == 'name':
+                            movie_name = form['name']
             print(url)
         result = req.get(url).json()    
         return render_template('movies.html', directors=list(directorDF['director_name']),
@@ -1241,30 +1250,33 @@ def movies_ui():
                                          genres=list(genresDF['genres']),
                                          keywords=list(keywordsDF['keywords']),
                                          screenwriter=list(screenwriterDF['writer_name']),
-                                         movie_dict=result)
+                                         movie_dict=result,
+                                         movie_name=movie_name
+                                         )
 
     return render_template('movies.html', directors=list(directorDF['director_name']),
                                          actors=list(actorDF['actor_name']),
                                          genres=list(genresDF['genres']),
                                          keywords=list(keywordsDF['keywords']),
                                          screenwriter=list(screenwriterDF['writer_name'])
-                                         
                                          )
 
 @app.route('/application/screenwriters_ui', methods=['GET', 'POST'])
 def screenwriters_ui():
     form = request.form
     # print(form)
+    screenwriter_name = ""
     if request.method == 'POST':
         if 'name' in form and form['name'] is not None:
             url = str(request.url_root) + 'screenwriters'+'?token='+ADMIN_TOKEN + '&name=' + form['name']
+            screenwriter_name = form['name']
             print(url)
         elif 'url' in form and form['url'] is not None:
             url = form['url']
         else :
             url = str(request.url_root) + 'screenwriters'+'?token='+ADMIN_TOKEN 
         result = req.get(url).json()
-        return render_template('screenwriters.html', screenwriters_dict=result)
+        return render_template('screenwriters.html', screenwriters_dict=result, screenwriter_name=screenwriter_name)
 
     return render_template('screenwriters.html')
 

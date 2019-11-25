@@ -2,7 +2,7 @@
 <br> </br>
 {% block body %}
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-  <a class="navbar-brand" href="#"></a>
+  <a class="navbar-brand" href="{{url_for('.index')}}"></a>
   <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
     <span class="navbar-toggler-icon"></span>
   </button>
@@ -23,7 +23,7 @@
 <center>
   <h1>IMDB Score Prediction</h1>
   <div class="row justify-content-center">
-    <div class="col-4">
+    <div class="col-sm-6 col-md-5 col-lg-4 col-xl-4">
       <form action="/application/imdbscoreprediction_ui" method="post">
         <div class="form-group">
           <label for="Director">Director <span style="color: red">*</span> : </label>
@@ -83,7 +83,7 @@
 
 {% if score is defined %}
 <div class="row justify-content-center">
-  <div class="col-6 text-center">
+  <div class="col-sm-8 col-md-8 col-lg-6 col-xl-6 text-center">
     <div class="card">
       <div class="card-header">Prediction Information</div>
       <div class="card-body">
