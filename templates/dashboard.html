@@ -15,28 +15,14 @@
         <a class="nav-item nav-link" href="/application/movies_ui">Movies</a>
         <a class="nav-item nav-link active" href="/application/screenwriters_ui">Screenwriters<span class="sr-only">(current)</span></a>
         <a class="nav-item nav-link" href="/application/imdbscoreprediction_ui">IMDB Score Prediction</a>
-        <a class="nav-item nav-link" href="/application/logout_ui">Logout</a>
+        <a class="nav-item nav-link" href="/application/home">Logout</a>
         </div>
     </div>
 </nav>
 <br />
 <center>
-    <h1> Register </h1>
-    <pr> Register a new account so you can access your unique API Token. </pr>
-    <form action="/application/screenwriters_ui" method="post" autocomplete="off">
-        <div class="form-group">
-            <label for="username">New Username <span style="color: red">*</span>  : </label>
-            <input type="text" id="username" name="username" required>
-
-        </div>
-        <div class="form-group">
-            <label for="password">Password <span style="color: red">*</span>  : </label>
-            <input class="form-control" type="password" id="pass" name="password" minlength="8" required>
-            <small>Password must be at least 8 characters in length.</small>
-
-        </div>
-        
-    </form>
+    <h1>Your API Key: </h1>
+    <h2>{{ register_result['token'] }}</h2>
 </center>
 
 <br/>

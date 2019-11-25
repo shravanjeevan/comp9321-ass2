@@ -16,6 +16,7 @@
         <a class="nav-item nav-link active" href="/application/screenwriters_ui">Screenwriters<span class="sr-only">(current)</span></a>
         <a class="nav-item nav-link" href="/application/imdbscoreprediction_ui">IMDB Score Prediction</a>
         <a class="nav-item nav-link" href="/application/login_ui">Login</a>
+        <a class="nav-item nav-link" href="/application/register_ui">Register</a>
         </div>
     </div>
 </nav>
@@ -23,18 +24,23 @@
 <center>
     <h1> Login </h1>
     <pr> Login into your account to access your API Token. </pr>
-    <form action="/application/screenwriters_ui" method="post" autocomplete="off">
-        <div class="form-group">
-            <label for="username">Username <span style="color: red">*</span>  : </label>
-            <input type="text" id="username" name="username" required>
+    <div class="row justify-content-center">
+        <div class="col-sm-6 col-md-5 col-lg-4 col-xl-4">
 
-        </div>
-        <div class="form-group">
-            <label for="password">Password <span style="color: red">*</span>  : </label>
-            <input class="form-control" type="password" id="pass" name="password" minlength="8" required>
-        </div>
+            <form action="/application/screenwriters_ui" method="post" autocomplete="off">
+                <div class="form-group">
+                    <label for="username">Username <span style="color: red">*</span>  : </label>
+                    <input class="form-control" type="text" id="username" name="username" required>
         
-    </form>
+                </div>
+                <div class="form-group">
+                    <label for="password">Password <span style="color: red">*</span>  : </label>
+                    <input class="form-control" type="password" id="pass" name="password" minlength="8" required>
+                </div>
+                <button type="submit" class="btn btn-primary">Login</button>
+            </form>
+        </div>
+    </div>
 </center>
 
 <br/>
