@@ -1201,6 +1201,20 @@ def register_ui():
     return render_template('dashboard.html', register_result=result)
       
 
+@app.route('/application/analytics_ui', methods=['GET'])
+def login_ui():
+    global ADMIN_TOKEN
+
+# analytics_api_call_count = loadCSV_vertical('analytics.csv')
+# top_actor = loadCSV_horizontal('top_actor.csv')
+# top_movie = loadCSV_horizontal('top_movie.csv')
+# top_director = loadCSV_horizontal('top_director.csv')
+# top_screenwriter = loadCSV_horizontal('top_screenwriter.csv')
+    return render_template('analytics.html', analytics_api_call_count=analytics_api_call_count)
+  
+
+
+
 @app.route('/application/login_ui', methods=['GET', 'POST'])
 def login_ui():
     global ADMIN_TOKEN
