@@ -25,8 +25,8 @@
   <pr> Press button below to get the list of screenwriters.
   <br> </br>
   <div class="row justify-content-center">
-    <div class="col-4">
-      <form action="/application/screenwriters_ui" method="post">
+    <div class="col-sm-6 col-md-5 col-lg-4 col-xl-4">
+      <form action="/application/screenwriters_ui" method="post" autocomplete="off">
         <label for="screenwriter_name">Screenwriter Name :</label>
         <input class="form-control" type='text' name='name' id="screenwriter_name" placeholder="Enter screenwriter name"> 
         <br />
@@ -37,52 +37,63 @@
   </div>
 </center>
   
-  <br/>
-  {% if screenwriters_dict is defined %}
-  <div class="row justify-content-center">
-    <div class="col-4 text-center">
-      <p><b>Total Number of Screenwriters: </b>{{screenwriters_dict['total_results']}}</p>
-      <div class="row">
-          <div class="col">
-            {% if screenwriters_dict['prev'] is defined and screenwriters_dict['next'] is defined %}
-            <div class="row justify-content-center">
-              <div class="col-4">
-                <form action="/application/screenwriters_ui" method="post">
-                  <input type='hidden' name='url' value="{{screenwriters_dict['prev']['href']}}" >
-                  {% if screenwriters_dict['prev']['href'] == None %}
-                  <button type="submit" class="btn btn-primary" disabled>Previous</button>
-                  {% else %}
-                  <button type="submit" class="btn btn-primary">Previous</button>
-                  {% endif %}
-                </form>
-              </div>
-              <div class="col-4">
-                <form action="/application/screenwriters_ui" method="post">
-                  <input type='hidden' name='url' value="{{screenwriters_dict['next']['href']}}" >
-                  {% if screenwriters_dict['next']['href'] == None %}
-                  <button type="submit" class="btn btn-primary" disabled>Next</button>
-                  {% else %}
-                  <button type="submit" class="btn btn-primary">Next</button>
-                  {% endif %}
-                </form>              
-              </div>
+<br/>
+{% if screenwriters_dict is defined and 'error' not in screenwriters_dict %}
+<div class="row justify-content-center">
+  <div class="col-sm-6 col-md-5 col-lg-4 col-xl-4 text-center">
+    <p><b>Total Number of Screenwriters: </b>{{screenwriters_dict['total_results']}}</p>
+    <div class="row">
+        <div class="col">
+          {% if screenwriters_dict['prev'] is defined and screenwriters_dict['next'] is defined %}
+          <div class="row justify-content-center">
+            <div class="col-sm-6 col-md-5 col-lg-4 col-xl-4">
+              <form action="/application/screenwriters_ui" method="post">
+                <input type='hidden' name='url' value="{{screenwriters_dict['prev']['href']}}" >
+                {% if screenwriters_dict['prev']['href'] == None %}
+                <button type="submit" class="btn btn-primary" disabled>Previous</button>
+                {% else %}
+                <button type="submit" class="btn btn-primary">Previous</button>
+                {% endif %}
+              </form>
             </div>
-            {% endif %}
+            <div class="col-sm-6 col-md-5 col-lg-4 col-xl-4">
+              <form action="/application/screenwriters_ui" method="post">
+                <input type='hidden' name='url' value="{{screenwriters_dict['next']['href']}}" >
+                {% if screenwriters_dict['next']['href'] == None %}
+                <button type="submit" class="btn btn-primary" disabled>Next</button>
+                {% else %}
+                <button type="submit" class="btn btn-primary">Next</button>
+                {% endif %}
+              </form>              
+            </div>
           </div>
+          {% endif %}
         </div>
-        <br />
-        <ul class="list-group">
-          {% for key in screenwriters_dict['writers'] %}
-          <li class="list-group-item">{{screenwriters_dict['writers'][key]['writer_name']}}</li>  
-          {% endfor %}
-          {% for key in screenwriters_dict['writer'] %}
-          <li class="list-group-item">{{screenwriters_dict['writer'][key]['writer_name']}}</li>  
-          {% endfor %}
-        </ul>
-  
+      </div>
+      <br />
+      <ul class="list-group">
+        {% for key in screenwriters_dict['writers'] %}
+        <li class="list-group-item">{{screenwriters_dict['writers'][key]['writer_name']}}</li>  
+        {% endfor %}
+        {% for key in screenwriters_dict['writer'] %}
+        <li class="list-group-item">{{screenwriters_dict['writer'][key]['writer_name']}}</li>  
+        {% endfor %}
+      </ul>
+
+  </div>
+</div>
+{% elif 'error' in screenwriters_dict and screenwriters_dict['error'] == 'Not Found' %}
+<div class="row justify-content-center">
+  <div class="col-sm-6 col-md-5 col-lg-4 col-xl-4">
+    <div class="card text-white bg-danger mb-3">
+      <div class="card-header">404 Not Found</div>
+      <div class="card-body">
+        <h5 class="card-title">{{ screenwriters_dict['message'] }}</h5>
+        <p class="card-text">The screenwriter of name "{{ screenwriter_name }}" was not found in our records.</p>
+      </div>
     </div>
   </div>
-  
+</div>
 {% endif %}
 <br/>
 <br/>

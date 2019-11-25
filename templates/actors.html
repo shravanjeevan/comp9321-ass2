@@ -24,9 +24,9 @@
   <h1> Actors </h1>
   <pr> Press button below to get the list of actors.
   <br> </br>
-  <form action="/application/actors_ui" method="post">
+  <form action="/application/actors_ui" method="post" autocomplete="off">
     <div class="row justify-content-center">
-      <div class="col-4">
+      <div class="col-sm-6 col-md-5 col-lg-4 col-xl-4">
 
         <label for="actor-name">Actor Name:</label>
         <input class="form-control" type='text' name='name' id="actor-name" placeholder="Enter actor name"> 
@@ -35,7 +35,7 @@
     <br/>
     <br/>
     <div class="row justify-content-center">
-      <div class="col-4">
+      <div class="col-sm-6 col-md-5 col-lg-4 col-xl-4">
         Gender : 
         <select class="custom-select" name="gender">
           <option default value="">Select gender</option>
@@ -52,15 +52,15 @@
 </center>
   
   <br/>
-  {% if actors_dict is defined %}
+  {% if actors_dict is defined and 'error' not in actors_dict %}
   <div class="row justify-content-center">
-    <div class="col-4 text-center">
+    <div class="col-sm-6 col-md-5 col-lg-4 col-xl-4 text-center">
       <p><b>Total Number of Actors: </b>{{actors_dict['total_results']}}</p>
       <div class="row">
           <div class="col">
             {% if actors_dict['prev'] is defined and actors_dict['next'] is defined %}
             <div class="row justify-content-center">
-                <div class="col-4">
+                <div class="col-sm-6 col-md-5 col-lg-4 col-xl-4">
             
                 <form action="/application/actors_ui" method="post">
                   <input type='hidden' name='url' value="{{actors_dict['prev']['href']}}" >
@@ -71,7 +71,7 @@
                   {% endif %}
                 </form>
               </div>
-              <div class="col-4">
+              <div class="col-sm-6 col-md-5 col-lg-4 col-xl-4">
                   <form action="/application/actors_ui" method="post">
                     <input type='hidden' name='url' value="{{actors_dict['next']['href']}}" >
                     {% if actors_dict['next']['href'] == None %}
@@ -111,6 +111,18 @@
   
     </div>
   </div>
+{% elif 'error' in actors_dict and actors_dict['error'] == 'Not Found' %}
+<div class="row justify-content-center">
+  <div class="col-sm-6 col-md-5 col-lg-4 col-xl-4">
+    <div class="card text-white bg-danger mb-3">
+      <div class="card-header">404 Not Found</div>
+      <div class="card-body">
+        <h5 class="card-title">{{ actors_dict['message'] }}</h5>
+        <p class="card-text">The actor of name "{{ actor_name }}" was not found in our records.</p>
+      </div>
+    </div>
+  </div>
+</div>
 {% endif %}
 
 <br/>

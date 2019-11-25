@@ -26,9 +26,9 @@
     To input multiple, input with commas
   <br/>
   <div class="row  justify-content-center">
-    <div class="col-4">
+    <div class="col-sm-6 col-md-5 col-lg-4 col-xl-4">
 
-      <form action="/application/movies_ui" method="post">
+      <form action="/application/movies_ui" method="post" autocomplete="off">
         <div class="form-group">
             <label for="movie-name">Movie Name:</label>
             <input class="form-control" type='text' name='name' id="movie-name" placeholder="Enter movie name"> 
@@ -101,47 +101,40 @@
     </div>
   </div>
 </center>
-  <br/>
-  {% if movie_dict is defined %}
-  <div class="row justify-content-center">
-    <div class="col-4 text-center">
-      <p><b>Total Number of Movies: </b>{{movie_dict['total_results']}}</p>
-      <div class="row justify-content-center">
-        {% if movie_dict['prev'] is defined and movie_dict['next'] is defined %}
-          <div class="col-4">
-              
-                  <form action="/application/movies_ui" method="post">
-                    <input type='hidden' name='url' value="{{movie_dict['prev']['href']}}" >
-                    {% if movie_dict['prev']['href'] == None %}
-                    <button type="submit" class="btn btn-primary" disabled >Previous</button>
-                    {% else %}
-                    <button type="submit" class="btn btn-primary" >Previous</button>
-                    {% endif %}
-                  </form>
-              
-                
-          </div>
-          <div class="col-4">
-            <form action="/application/movies_ui" method="post">
-              <input type='hidden' name='url' value="{{movie_dict['next']['href']}}" >
-              {% if movie_dict['next']['href'] == None %}
-              <button type="submit" class="btn btn-primary" disabled>Next</button>
-              {% else %}
-              <button type="submit" class="btn btn-primary">Next</button>
-              {% endif %}
-            </form>              
-          </div>
-          {% endif %}
+<br/>
+{% if movie_dict is defined and 'error' not in movie_dict %}
+<div class="row justify-content-center">
+  <div class="col-sm-6 col-md-5 col-lg-4 col-xl-4 text-center">
+    <p><b>Total Number of Movies: </b>{{movie_dict['total_results']}}</p>
+    <div class="row justify-content-center">
+      {% if movie_dict['prev'] is defined and movie_dict['next'] is defined %}
+        <div class="col-sm-6 col-md-5 col-lg-4 col-xl-4">    
+          <form action="/application/movies_ui" method="post">
+            <input type='hidden' name='url' value="{{movie_dict['prev']['href']}}" >
+            {% if movie_dict['prev']['href'] == None %}
+            <button type="submit" class="btn btn-primary" disabled >Previous</button>
+            {% else %}
+            <button type="submit" class="btn btn-primary" >Previous</button>
+            {% endif %}
+          </form>      
         </div>
-      </div>
-        
-  
+        <div class="col-sm-6 col-md-5 col-lg-4 col-xl-4">
+          <form action="/application/movies_ui" method="post">
+            <input type='hidden' name='url' value="{{movie_dict['next']['href']}}" >
+            {% if movie_dict['next']['href'] == None %}
+            <button type="submit" class="btn btn-primary" disabled>Next</button>
+            {% else %}
+            <button type="submit" class="btn btn-primary">Next</button>
+            {% endif %}
+          </form>              
+        </div>
+      {% endif %}
     </div>
   </div>
 </div>
 <br/>
 <div class="row justify-content-center">
-  <div class="col-4">
+  <div class="col-sm-6 col-md-5 col-lg-4 col-xl-4">
       <ul class="list-group">
           {% for key in movie_dict['movies'] %}
           <li class="list-group-item">{{movie_dict['movies'][key]['title']}}</li>  
@@ -154,7 +147,18 @@
         </ul>
   </div>
 </div>
-  
+{% elif 'error' in movie_dict and movie_dict['error'] == 'Not Found' %}
+<div class="row justify-content-center">
+  <div class="col-sm-6 col-md-5 col-lg-4 col-xl-4">
+    <div class="card text-white bg-danger mb-3">
+      <div class="card-header">404 Not Found</div>
+      <div class="card-body">
+        <h5 class="card-title">{{ movie_dict['message'] }}</h5>
+        <p class="card-text">The movie of name "{{ movie_name }}" was not found in our records.</p>
+      </div>
+    </div>
+  </div>
+</div>
 {% endif %}
 <br/>
 <br/>
