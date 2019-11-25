@@ -26,7 +26,7 @@ token_dict = {}
 user_dict = {}
 
 app = Flask(__name__)
-
+# GLOBAL VARIABLES
 ADMIN_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9"
 token_dict[ADMIN_TOKEN] = True
 api = Api(app, title='COMP9321 Assignment 2 - API Documentation', validate=True)
@@ -60,7 +60,7 @@ def valid_token(token):
     else:
         return False
 
-# GLOBAL VARIABLES
+
 actor_average, directorDF, screenwriterDF, actorDF, keywordsDF, genresDF, movieDF = process_dataset2()
 analytics_api_call_count = loadCSV_vertical('analytics.csv')
 top_actor = loadCSV_horizontal('top_actor.csv')
@@ -855,82 +855,82 @@ class SpecificScreenwriter(Resource):
 
 # Handles query pagination
 def pagination(request, args, record):
-
-        offset = 0
-        limit = 20
-        if 'offset' in args and args['offset'] is not None and args['offset'] > 0:
-            offset = args['offset']
-        elif 'offset' in args and args['offset'] is not None and args['offset'] < 0:
-            return record, {
-                'error': "Bad request.",
-                'message': "Invalid offset input. Offset should be >= 0."
-            }, 400
-
-        if 'limit' in args and args['limit'] is not None and args['limit'] > 0:
-            limit = args['limit']
-        elif 'limit' in args and args['limit'] is not None and args['limit'] < 0:
-            return record, {
-                'error': "Bad request.",
-                'message': "Invalid limit input. Limit should be >= 0."
-            }, 400
-
-        qsize = len(record.index)
-        record = record.iloc[offset : offset + limit]
-        qpagesize = len(record.index)
-
-        querystring = ""
-        for key in args.keys():
-            if key == 'offset' or key == 'limit': continue
-            if args[key] is not None:
-                querystring += key + "=" + urlencode(str(args[key])) + "&"
-        baseURL     = request.base_url + "?" + querystring
-        print(baseURL)
-        firstURL    = baseURL + 'limit=' + str(limit) + "&"
-        lastURL     = baseURL
-        prevURL     = baseURL
-        nextURL     = baseURL
-
-        if offset - limit > 0: # if there's nothing previous then it's just the original url
-            prevURL += 'offset=' + str((offset - limit)) + '&limit=' + str(limit) + "&"
-        else:
-            prevURL += 'limit=' + str(limit) + "&"
-
-        if offset + limit < qsize:
-            nextURL += 'offset=' + str((offset + limit)) + "&"
-            if offset + limit + limit > qsize:
-                nextURL += 'limit=' + str(qsize - offset - limit) + "&"
-                lastURL = nextURL
-            else:
-                nextURL += 'limit=' + str(limit) + "&"
-                lastURL += 'offset=' + str((qsize - (qsize % limit))) + '&limit=' + str(limit) + "&"
-        else:
-            nextURL = None
-            lastURL = None
-
-        if firstURL is not None : firstURL = firstURL[:-1]
-        if lastURL  is not None : lastURL = lastURL[:-1]
-        if prevURL  is not None : prevURL = prevURL[:-1]
-        if nextURL  is not None : nextURL = nextURL[:-1]
-
+    
+    offset = 0
+    limit = 20
+    if 'offset' in args and args['offset'] is not None and args['offset'] > 0:
+        offset = args['offset']
+    elif 'offset' in args and args['offset'] is not None and args['offset'] < 0:
         return record, {
-            'href'  : request.url,
-            'offset': offset,
-            'limit' : limit,
-            'results_shown' : qpagesize,
-            'total_results' : qsize,
-            'first' : {
-                'href'  : firstURL
-            },
-            'prev'  : {
-                'href'  : prevURL
-            },
-            'next'  : {
-                'href'  : nextURL
-            },
-            'last'  : {
-                'href'  :lastURL
-            }
-        }, 200
+            'error': "Bad request.",
+            'message': "Invalid offset input. Offset should be >= 0."
+        }, 400
+
+    if 'limit' in args and args['limit'] is not None and args['limit'] > 0:
+        limit = args['limit']
+    elif 'limit' in args and args['limit'] is not None and args['limit'] < 0:
+        return record, {
+            'error': "Bad request.",
+            'message': "Invalid limit input. Limit should be >= 0."
+        }, 400
+
+    qsize = len(record.index)
+    record = record.iloc[offset : offset + limit]
+    qpagesize = len(record.index)
+
+    querystring = ""
+    for key in args.keys():
+        if key == 'offset' or key == 'limit': continue
+        if args[key] is not None:
+            querystring += key + "=" + urlencode(str(args[key])) + "&"
+    baseURL     = request.base_url + "?" + querystring
+    print(baseURL)
+    firstURL    = baseURL + 'limit=' + str(limit) + "&"
+    lastURL     = baseURL
+    prevURL     = baseURL
+    nextURL     = baseURL
+
+    if offset - limit >= 0: # if there's nothing previous then it's just the original url
+        prevURL += 'offset=' + str((offset - limit)) + '&limit=' + str(limit) + "&"
+    else:
+        prevURL = None
+
+    if offset + limit < qsize:
+        nextURL += 'offset=' + str((offset + limit)) + "&"
+        if offset + limit + limit > qsize:
+            nextURL += 'limit=' + str(limit) + "&"
+            lastURL = nextURL
+        else:
+            nextURL += 'limit=' + str(limit) + "&"
+            lastURL += 'offset=' + str((qsize - (qsize % limit))) + '&limit=' + str(limit) + "&"
+    else:
+        nextURL = None
+        lastURL += 'offset=' + str((qsize - (qsize % limit))) + '&limit=' + str(limit) + "&"
+
+    if firstURL is not None : firstURL = firstURL[:-1]
+    if lastURL  is not None : lastURL = lastURL[:-1]
+    if prevURL  is not None : prevURL = prevURL[:-1]
+    if nextURL  is not None : nextURL = nextURL[:-1]
+
+    return record, {
+        'href'  : request.url,
+        'offset': offset,
+        'limit' : limit,
+        'results_shown' : qpagesize,
+        'total_results' : qsize,
+        'first' : {
+            'href'  : firstURL
+        },
+        'prev'  : {
+            'href'  : prevURL
+        },
+        'next'  : {
+            'href'  : nextURL
+        },
+        'last'  : {
+            'href'  :lastURL
+        }
+    }, 200
 
 
 top_act_parser = reqparse.RequestParser()

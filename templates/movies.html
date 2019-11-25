@@ -24,112 +24,136 @@
   <h1> Movies </h1>
   <pr> Press button below to get the list of movies.
     To input multiple, input with commas
-  <br> </br>
-  <form class="form-group" action="/application/movies_ui" method="post">
-  Movie Name : <input type='text' name='name'> 
-  <div class="form-group">
-      <label for="Actor">Actor</label>
-      <select name="actor" class="form-control">
-          <option value=""></option>
-        {% for dir in actors %}
-         <option value="{{dir}}">{{dir}}</option>
-        {% endfor %}
-      </select>
-      <small id="actorHelp" class="form-text text-muted">Please select the actor of your film</small>
-  </div>
+  <br/>
+  <div class="row  justify-content-center">
+    <div class="col-4">
 
-  <div class="form-group">
-      <label for="Director">Director</label>
-      <select name="director" class="form-control">
-          <option value=""></option>
-        {% for dir in directors %}
-         <option value="{{dir}}">{{dir}}</option>
-        {% endfor %}
-      </select>
-      <small id="directorHelp" class="form-text text-muted">Please select the director of your film</small>
-      </div>
-  <div class="form-group">
-      <label for="Screenwriter">Screenwriter</label>
-      <select name="screenwriter" class="form-control">
-          <option value=""></option>
-        {% for dir in screenwriter %}
-          <option value="{{dir}}">{{dir}}</option>
-        {% endfor %}
-      </select>
-      <small id="screenwriterHelp" class="form-text text-muted">Please select the screenwriter of your film</small>
-      </div>
-
-      <div class="form-group">
-      <label for="Keyword">Keyword</label>
-      <select name="keyword" class="form-control">
-          <option value=""></option>
-        {% for dir in keywords %}
-          <option value="{{dir}}">{{dir}}</option>
-        {% endfor %}
-      </select>
-      <small id="keywordHelp" class="form-text text-muted">Please select the keyword of your film</small>
-      </div>
-      <div class="form-group">
-          <label for="Genre">Genre</label>
-          <select name="genre" class="form-control">
-              <option value=""></option>
-            {% for dir in genres %}
+      <form action="/application/movies_ui" method="post">
+        <div class="form-group">
+            <label for="movie-name">Movie Name:</label>
+            <input class="form-control" type='text' name='name' id="movie-name" placeholder="Enter movie name"> 
+        </div>
+        <br />
+        <div class="form-group">
+            <label for="actor-names">Actor(s):</label>
+            <select multiple name="actor" class="form-control" id="actor-names" size="10">
+              {% for dir in actors %}
               <option value="{{dir}}">{{dir}}</option>
-            {% endfor %}
-          </select>
-          <small id="genreHelp" class="form-text text-muted">Please select the genre of your film</small>
+              {% endfor %}
+            </select>
+            <small id="actorHelp" class="form-text text-muted">Please select the actor(s) of your film.</small>
+            <small id="actorHelp" class="form-text text-muted"><i>Hold Ctrl & Click to select multiple actors.</i></small>
+        </div>
+    
+        <div class="form-group">
+            <label for="Director">Director:</label>
+            <select name="director" class="custom-select">
+                <option default value="">Select a director</option>
+              {% for dir in directors %}
+              <option value="{{dir}}">{{dir}}</option>
+              {% endfor %}
+            </select>
+            <small id="directorHelp" class="form-text text-muted">Please select the director of your film</small>
           </div>
+          <div class="form-group">
+            <label for="sscreenwriter">Screenwriter:</label>
+            <select name="screenwriter" class="custom-select">
+                <option default value="">Select a screenwriter</option>
+              {% for dir in screenwriter %}
+                <option value="{{dir}}">{{dir}}</option>
+              {% endfor %}
+            </select>
+            <small id="screenwriterHelp" class="form-text text-muted">Please select the screenwriter of your film</small>
+          </div>
+    
+          <div class="form-group">
+            <label for="Keyword">Keyword(s):</label>
+            <select multiple name="keyword" class="form-control">
+              {% for dir in keywords %}
+                <option value="{{dir}}">{{dir}}</option>
+              {% endfor %}
+            </select>
+            <small id="keywordHelp" class="form-text text-muted">Please select the keyword(s) of your film</small>
+            <small id="keywordHelp" class="form-text text-muted"><i>Hold Ctrl & Click to select multiple keywords.</i></small>
 
-  budget : <input type='number' name='budget'> 
-  <br/>
-  <br/>
-  revenue : <input type='number' name='revenue'> 
-  <br/>
-  <br/>
-  <button type="submit" class="btn btn-primary">Get Movies</button>
-  </form>
+          </div>
+          <div class="form-group">
+            <label for="Genre">Genre(s):</label>
+            <select multiple name="genre" class="form-control">
+              {% for dir in genres %}
+                <option value="{{dir}}">{{dir}}</option>
+              {% endfor %}
+            </select>
+            <small id="genreHelp" class="form-text text-muted">Please select the genre(s) of your film</small>
+            <small id="genreHelp" class="form-text text-muted"><i>Hold Ctrl & Click to select multiple genres.</i></small>
+
+          </div>
+          <div class="form-group">
+              <label for="budget">Budget:</label> 
+              <input class="form-control" type='number' name='budget' min=0> 
+          </div>
+          <div class="form-group">
+              <label for="Revenue">Revenue:</label> 
+              <input class="form-control" type='number' name='revenue' min=0> 
+          </div>
+      <button type="submit" class="btn btn-primary">Get Movies</button>
+      </form>
+    </div>
+  </div>
 </center>
   <br/>
   {% if movie_dict is defined %}
   <div class="row justify-content-center">
     <div class="col-4 text-center">
       <p><b>Total Number of Movies: </b>{{movie_dict['total_results']}}</p>
-      <div class="row">
-          <div class="col">
-            {% if movie_dict['prev'] is defined and movie_dict['next'] is defined %}
-              {%if movie_dict['prev']['href'] != None%}
-              <span>
+      <div class="row justify-content-center">
+        {% if movie_dict['prev'] is defined and movie_dict['next'] is defined %}
+          <div class="col-4">
+              
                   <form action="/application/movies_ui" method="post">
-                    <input type='hidden' name='url' value={{movie_dict['prev']['href']}} >
-                    <button type="submit" class="btn btn-primary">Previous</button>
+                    <input type='hidden' name='url' value="{{movie_dict['prev']['href']}}" >
+                    {% if movie_dict['prev']['href'] == None %}
+                    <button type="submit" class="btn btn-primary" disabled >Previous</button>
+                    {% else %}
+                    <button type="submit" class="btn btn-primary" >Previous</button>
+                    {% endif %}
                   </form>
-              </span>
-                {% endif %}
-                {%if movie_dict['next']['href'] != None%}
-            
-                <span>
-                  <form action="/application/movies_ui" method="post">
-                    <input type='hidden' name='url' value={{movie_dict['next']['href']}} >
-                    <button type="submit" class="btn btn-primary">Next</button>
-                  </form>              
-              </span>
-                {% endif %}
-            {% endif %}
+              
+                
           </div>
+          <div class="col-4">
+            <form action="/application/movies_ui" method="post">
+              <input type='hidden' name='url' value="{{movie_dict['next']['href']}}" >
+              {% if movie_dict['next']['href'] == None %}
+              <button type="submit" class="btn btn-primary" disabled>Next</button>
+              {% else %}
+              <button type="submit" class="btn btn-primary">Next</button>
+              {% endif %}
+            </form>              
+          </div>
+          {% endif %}
         </div>
-        <ul class="list-group">
-          {% for key in movie_dict['movies'] %}
-          <li class="list-group-item">{{movie_dict['movies'][key]['title']}}</li>  
-       
-           {% endfor %}
-           {% for key in movie_dict['movie'] %}
-          <li class="list-group-item">{{movie_dict['movie'][key]['title']}}</li>  
-       
-           {% endfor %}
-        </ul>
+      </div>
+        
   
     </div>
   </div>
+</div>
+<br/>
+<div class="row justify-content-center">
+  <div class="col-4">
+      <ul class="list-group">
+          {% for key in movie_dict['movies'] %}
+          <li class="list-group-item">{{movie_dict['movies'][key]['title']}}</li>  
+        
+            {% endfor %}
+            {% for key in movie_dict['movie'] %}
+          <li class="list-group-item">{{movie_dict['movie'][key]['title']}}</li>  
+        
+            {% endfor %}
+        </ul>
+  </div>
+</div>
   
-  {% endif %}
+{% endif %}
 {% endblock %}

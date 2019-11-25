@@ -37,29 +37,47 @@
     <p><b>Total Number of Keywords: </b>{{keywords_dict['total_results']}}</p>
     <div class="row">
         <div class="col">
-          {% if keywords_dict['prev'] is defined and keywords_dict['next'] is defined %}
-           {%if keywords_dict['prev']['href'] != None%}
-            
-              <span>
-                <form action="/application/keywords_ui" method="post">
-                  <input type='hidden' name='url' value={{keywords_dict['prev']['href']}} >
-                  <button type="submit" class="btn btn-primary">Previous</button>
-                </form>
-              </span>
-              {% endif %}
+          <div class="row justify-content-center">
+            <div class="col-4">
 
+              {% if keywords_dict['prev'] is defined and keywords_dict['next'] is defined %}
+               {%if keywords_dict['prev']['href'] != None%}
+                
+                  
+                    <form action="/application/keywords_ui" method="post">
+                      <input type='hidden' name='url' value="{{keywords_dict['prev']['href']}}" >
+                      <button type="submit" class="btn btn-primary">Previous</button>
+                    </form>
+                  
+                  {% endif %}
+            </div>
+            <div class="col-4">
               {%if keywords_dict['next']['href'] != None%}
-            <span>
+            
                 <form action="/application/keywords_ui" method="post">
-                  <input type='hidden' name='url' value={{keywords_dict['next']['href']}} >
+                  <input type='hidden' name='url' value="{{keywords_dict['next']['href']}}" >
                   <button type="submit" class="btn btn-primary">Next</button>
                 </form>              
-            </span>
+            
+            {% endif %}
+  
             {% endif %}
 
-            {% endif %}
+            </div>
+    
+            </div>
+          </div>
         </div>
       </div>
+      
+      
+    </div>
+  </div>
+</div>
+<br />
+<div class="row justify-content-center">
+    <div class="col-4 text-center">
+
       <ul class="list-group">
         {% for key in keywords_dict['keywords'] %}
         <li class="list-group-item">{{keywords_dict['keywords'][key]['keywords']}}</li>  
@@ -68,9 +86,8 @@
         <li class="list-group-item">{{keywords_dict['keyword'][key]['keywords']}}</li>  
         {% endfor %}
       </ul>
-
+    </div>
   </div>
-</div>
 
 {% endif %}
 
